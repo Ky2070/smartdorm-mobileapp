@@ -21,6 +21,7 @@
     "moment": "^2.30.1",
     "react": "19.0.0",
     "react-native": "0.79.2",
+    "react-native-config": "^1.5.5",
     "react-native-paper": "^5.14.5",
     "react-native-render-html": "^6.3.4",
     "react-native-safe-area-context": "^5.4.0",

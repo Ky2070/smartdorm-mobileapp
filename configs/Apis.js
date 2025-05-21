@@ -1,7 +1,10 @@
 import axios from "axios";
-const BASE_URL = 'https://thanhduong.pythonanywhere.com/'; //Change your BASE_URL
+import Config from 'react-native-config';
+
+const BASE_URL = Config.BASE_URL; //Change your BASE_URL
 
 export const endpoints = {
+    'buildings': '/buildings/',
     'rooms': '/rooms/',
     'invoices':'/invoices/',
     'login': '/o/token/',
