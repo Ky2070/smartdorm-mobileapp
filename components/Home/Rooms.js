@@ -45,7 +45,15 @@ const Rooms = () => {
                     )}
                     <Text style={{ fontSize: 20, fontWeight: 'bold', marginTop: 10 }}>{room.name}</Text>
                     {room.description && <Text>{room.description}</Text>}
-                    <Text>Trạng thái: {room.available ? "Còn trống" : "Đã có người ở"}</Text>
+
+                    {/* Chỉ hiển thị nếu API có capacity và current_occupants */}
+                    {room.capacity !== undefined && room.current_occupants !== undefined ? (
+                        <Text>
+                            Trạng thái: {room.current_occupants < room.capacity ? "Phòng còn chỗ" : "Phòng đã đầy"} ({room.current_occupants}/{room.capacity})
+                        </Text>
+                    ) : (
+                        <Text>Trạng thái: {room.available ? "Còn trống" : "Đã có người ở"}</Text>
+                    )}
                 </>
             ) : (
                 <Text>Bạn chưa đăng ký phòng nào.</Text>
