@@ -6,10 +6,12 @@ const BASE_URL = Config.BASE_URL; //Change your BASE_URL
 export const endpoints = {
     'buildings': '/buildings/',
     'rooms': '/rooms/',
+    'register-room': '/register-room/',
     'invoices':'/invoices/',
     'login': '/o/token/',
     'register': '/users/',
-    'current-user': '/users/current-user/'
+    'current-user': '/users/current-user/',
+    'my-room': '/my-room/',
 }
 
 export const authApis = (token) => {

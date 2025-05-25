@@ -81,7 +81,7 @@ const Home = () =>{
             <FlatList onEndReached={loadMore} ListFooterComponent={loading && <ActivityIndicator />} data={rooms}
                       renderItem={({item}) => <List.Item key={`Rooms${item.id}`} title={item.name}
                                                     description={item.created_date}
-                                                    left={() => <TouchableOpacity onPress={() => nav.navigate('roomRegister', {'RoomId': item.id})}>
+                                                    left={() => <TouchableOpacity onPress={() => nav.navigate('roomDetails', {'RoomId': item.id})}>
                                                         <Image style={MyStyles.avatar} source={{uri: item.image}} />
                                                     </TouchableOpacity>} />} />
 
