@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useContext } from 'react';
 import { View, Text, Image, Button, ActivityIndicator, Alert } from 'react-native';
 import Apis, { endpoints, authApis } from '../../configs/Apis';
-import { MyUserContext } from '../../configs/MyContext';
+import { MyUserContext } from '../../configs/MyContexts';
 import MyStyles from '../../styles/MyStyles';
 
 const RoomDetails = ({ route, navigation }) => {

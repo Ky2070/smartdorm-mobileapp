@@ -1,6 +1,6 @@
 import { useContext } from "react";
 import { Text, View } from "react-native";
-import { MyDispatchContext, MyUserContext } from "../../configs/Contexts";
+import { MyDispatchContext, MyUserContext } from "../../configs/MyContexts";
 import MyStyles from "../../styles/MyStyles";
 import { Button } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";

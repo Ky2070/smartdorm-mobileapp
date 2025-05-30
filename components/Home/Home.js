@@ -1,7 +1,7 @@
 import { useNavigation } from "@react-navigation/native";
 import { useEffect, useState } from "react"
 import Apis, { endpoints } from "../../configs/Apis";
-import { ActivityIndicator, FlatList, SafeAreaView, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, FlatList, SafeAreaView, TouchableOpacity, View, Image } from "react-native";
 import MyStyles from "../../styles/MyStyles";
 import { Chip, List, Searchbar } from "react-native-paper";
 
@@ -15,9 +15,14 @@ const Home = () =>{
     const nav = useNavigation();
 
     const loadBuilds = async () => {
+    try {
         let res = await Apis.get(endpoints['buildings']);
-        setBuildings(res.data);   
+        console.log("Danh sách tòa nhà:", res.data); // 👈 log dữ liệu
+        setBuildings(res.data);
+    } catch (err) {
+        console.error("Lỗi khi load buildings:", err);
     }
+}
 
     const loadRooms = async () => {
         if (page > 0){
@@ -30,7 +35,8 @@ const Home = () =>{
             try {
             setLoading(true);
             let res = await Apis.get(url);
-            setRooms([...rooms, res.data.results]);
+            console.log(`Dữ liệu phòng (page ${page}):`, res.data); // 👈 log kết quả
+            setRooms([...rooms, ...res.data.results]);
             
             if(res.data.next === null)
                 setPage(0);
@@ -76,12 +82,13 @@ const Home = () =>{
                     <Chip icon="label" style={MyStyles.m} >{b.name}</Chip>
                 </TouchableOpacity>)}
             </View>
-            <Searchbar placeholder="Tìm kiếm khóa học.." value={q} onChangeText={setQ} />
+            <Searchbar placeholder="Tìm kiếm phòng KTX..." value={q} onChangeText={setQ} />
 
-            <FlatList onEndReached={loadMore} ListFooterComponent={loading && <ActivityIndicator />} data={rooms}
+            <FlatList keyExtractor={(item) => item.id.toString()}
+            onEndReached={loadMore} ListFooterComponent={loading && <ActivityIndicator />} data={rooms}
                       renderItem={({item}) => <List.Item key={`Rooms${item.id}`} title={item.name}
-                                                    description={item.created_date}
-                                                    left={() => <TouchableOpacity onPress={() => nav.navigate('roomDetails', {'RoomId': item.id})}>
+                                                    description={`Sức chứa: ${item.capacity}, Còn trống: ${item.available_capacity}`}
+                                                    left={() => <TouchableOpacity onPress={() => nav.navigate('RoomDetails', {'RoomId': item.id})}>
                                                         <Image style={MyStyles.avatar} source={{uri: item.image}} />
                                                     </TouchableOpacity>} />} />
 

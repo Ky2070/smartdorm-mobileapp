@@ -3,7 +3,7 @@ import { useContext, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import Apis, { authApis, endpoints } from "../../configs/Apis";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { MyDispatchContext } from "../../configs/Contexts";
+import { MyDispatchContext } from "../../configs/MyContexts";
 import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native"
 import { Button, HelperText, TextInput } from "react-native-paper";
 import Config from 'react-native-config';
