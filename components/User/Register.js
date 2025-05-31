@@ -1,5 +1,5 @@
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native"
-import MyStyles from "../../styles/MyStyles"
+import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import MyStyles from "../../styles/MyStyles";
 import { Button, HelperText, TextInput } from "react-native-paper";
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from "react";
@@ -40,7 +40,7 @@ const Register = () => {
     const nav = useNavigation();
 
     const setState = (value, field) => {
-        setUser({...user, [field]: value})
+        setUser({...user, [field]: value});
     }
 
     const picker = async () => {
@@ -61,12 +61,12 @@ const Register = () => {
             return false;
         }
 
-        for (let i of info)
-            if (user[i.field] === '') {
+        for (let i of info) {
+            if (!user[i.field] || user[i.field].trim() === '') {
                 setMsg(`Vui lòng nhập ${i.label}!`);
                 return false;
             }
-
+        }
         if (user.password && user.password !== user.confirm) {
             setMsg("Mật khẩu không khớp!");
             return false;
@@ -132,7 +132,7 @@ const Register = () => {
 
             <Button onPress={register} disabled={loading} loading={loading} style={MyStyles.m} mode="contained">Đăng ký</Button>
         </ScrollView>
-    )
-}
+    );
+};
 
 export default Register;

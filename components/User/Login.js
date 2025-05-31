@@ -1,12 +1,14 @@
-import MyStyles from "../../styles/MyStyles"
+import MyStyles from "../../styles/MyStyles";
 import { useContext, useState } from "react";
 import { useNavigation } from "@react-navigation/native";
 import Apis, { authApis, endpoints } from "../../configs/Apis";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { MyDispatchContext } from "../../configs/MyContexts";
-import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native"
+import { Image, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { Button, HelperText, TextInput } from "react-native-paper";
 import Config from 'react-native-config';
+// import dotenv from 'dotenv';
+// dotenv.config();
 
 const Login = () => {
     const info = [{
@@ -14,7 +16,7 @@ const Login = () => {
         field: 'username',
         icon: 'account',
         secureTextEntry: false
-}, {
+    }, {
         label: 'Mật khẩu',
         field: 'password',
         icon: 'eye',
@@ -28,7 +30,7 @@ const Login = () => {
     const dispatch = useContext(MyDispatchContext);
 
     const setState = (value, field) => {
-        setUser({...user, [field]: value})
+        setUser({...user, [field]: value});
     }
 
     const validate = () => {
@@ -46,15 +48,19 @@ const Login = () => {
         return true;
     }
 
+    // console.log(process.env.CLIENT_ID);
+    // console.log(process.env.CLIENT_SECRET);
+
     const login = async () => {
         if (validate() === true){
             try {
                 setLoading(true);
-                
+                // Config.CLIENT_ID,
+                // Config.CLIENT_SECRET,
                 let res = await Apis.post(endpoints['login'], {
                     ...user,
-                    client_id: Config.CLIENT_ID,
-                    client_secret: Config.CLIENT_SECRET,
+                    client_id: '8qOcCr3K5mgqgpPJWklFsrnbxR1TZ9MC0zAKXOoN',
+                    client_secret: 'NFNTDKSw5A5i76ADvzrbY3M37xsM4j8VEd61AdwRtggAX92zM9QKR66xyTQPfYzBjV0oKU67GRMeLz11eAkTbyI2QbdTIseHRYrAiEzfKe8y9kKTeLeXLw7zi0ylGixA',
                     grant_type: 'password'
                 });
                 await AsyncStorage.setItem('token', res.data.access_token);
@@ -65,6 +71,8 @@ const Login = () => {
                     "type": "login",
                     "payload": u.data
                 });
+
+                 nav.navigate("index"); // 🟢 thêm điều hướng sau login
             } catch (ex) {
                 console.error(ex);
             } finally {
@@ -88,7 +96,7 @@ const Login = () => {
 
             <Button onPress={login} disabled={loading} loading={loading} style={MyStyles.m} mode="contained">Đăng nhập</Button>
         </ScrollView>
-    )
-}
+    );
+};
 
 export default Login;
