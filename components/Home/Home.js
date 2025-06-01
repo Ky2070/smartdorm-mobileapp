@@ -1,9 +1,17 @@
 import { useNavigation } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import Apis, { endpoints } from "../../configs/Apis";
-import { ActivityIndicator, FlatList, SafeAreaView, TouchableOpacity, View, Image } from "react-native";
+import {
+  ActivityIndicator,
+  FlatList,
+  SafeAreaView,
+  TouchableOpacity,
+  View,
+  Image,
+  Text
+} from "react-native";
 import MyStyles from "../../styles/MyStyles";
-import { Chip, List, Searchbar } from "react-native-paper";
+import { Chip, Searchbar, Card } from "react-native-paper";
 
 const Home = () => {
     const [buildings, setBuildings] = useState([]);
@@ -78,27 +86,46 @@ const Home = () => {
     }
 
     return (
-        <SafeAreaView style={[MyStyles.container, MyStyles.p]}>
+        <SafeAreaView style={[MyStyles.container, { padding: 10 }]}>
+        <Searchbar
+            placeholder="Tìm kiếm phòng KTX..."
+            value={q}
+            onChangeText={setQ}
+            style={{ marginBottom: 10, borderRadius: 30 }}
+        />
 
-            <View style={[MyStyles.row, MyStyles.wrap]}>
-                <TouchableOpacity onPress={() => setBuildId(null)}>
-                    <Chip icon="label" style={MyStyles.m}>Tất cả</Chip>
-                </TouchableOpacity>
+        <View style={[MyStyles.row, MyStyles.wrap, { marginBottom: 10 }]}>
+            <Chip
+            icon="home-group"
+            selected={!buildId}
+            onPress={() => setBuildId(null)}
+            style={[MyStyles.m]}
+            >
+            Tất cả
+            </Chip>
+            {buildings.map((b) => (
+            <Chip
+                key={b.id}
+                icon="home-city"
+                selected={buildId === b.id}
+                onPress={() => setBuildId(b.id)}
+                style={[MyStyles.m]}
+            >
+                {b.name}
+            </Chip>
+            ))}
+        </View>
 
-                {buildings.map(b => <TouchableOpacity key={`Build${b.id}`} onPress={() => setBuildId(b.id)}>
-                    <Chip icon="label" style={MyStyles.m} >{b.name}</Chip>
-                </TouchableOpacity>)}
-            </View>
-            <Searchbar placeholder="Tìm kiếm phòng KTX..." value={q} onChangeText={setQ} />
-
-            <FlatList keyExtractor={(item) => item.id.toString()}
-            onEndReached={loadMore} ListFooterComponent={loading && <ActivityIndicator />} data={rooms}
-                      renderItem={({item}) => <List.Item key={`Rooms${item.id}`} title={item.name}
-                                                    description={`Sức chứa: ${item.capacity}`}
-                                                    left={() => <TouchableOpacity onPress={() => nav.navigate('RoomDetail', {'RoomId': item.id})}>
-                                                        <Image style={MyStyles.avatar} source={item.image ? { uri: item.image } : require('../../assets/favicon.png')} />
-                                                    </TouchableOpacity>} />} />
-
+        <FlatList
+            data={rooms}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderRoom}
+            numColumns={2}
+            onEndReached={loadMore}
+            ListFooterComponent={loading && <ActivityIndicator size="large" />}
+            showsVerticalScrollIndicator={false}
+            columnWrapperStyle={{ justifyContent: "space-between" }}
+        />
         </SafeAreaView>
     );
 };

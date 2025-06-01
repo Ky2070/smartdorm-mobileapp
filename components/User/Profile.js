@@ -10,6 +10,8 @@ const Profile = () => {
     const dispatch = useContext(MyDispatchContext);
     const nav = useNavigation();
 
+    console.info(user);
+    
     const logout = () => {
         dispatch({
             "type": "logout"

@@ -5,7 +5,8 @@ export default (current, action) => {
         case 'login':
             return action.payload;
         case 'logout':
-            AsyncStorage.removeItem('token');
+            AsyncStorage.removeItem("token");
+            console.log("Xóa token thành công");
             return null;
     }
     return current;

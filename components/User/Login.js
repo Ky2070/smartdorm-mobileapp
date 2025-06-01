@@ -63,10 +63,12 @@ const Login = () => {
                     client_secret: 'NFNTDKSw5A5i76ADvzrbY3M37xsM4j8VEd61AdwRtggAX92zM9QKR66xyTQPfYzBjV0oKU67GRMeLz11eAkTbyI2QbdTIseHRYrAiEzfKe8y9kKTeLeXLw7zi0ylGixA',
                     grant_type: 'password'
                 });
+                console.info(res.data.access_token);
                 await AsyncStorage.setItem('token', res.data.access_token);
 
                 let u = await authApis(res.data.access_token).get(endpoints['current-user']);
-
+                console.info(u.data);
+                
                 dispatch({
                     "type": "login",
                     "payload": u.data
