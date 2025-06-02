@@ -1,5 +1,8 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { View, Text, Image, Button, ActivityIndicator, Alert, StyleSheet, ScrollView } from 'react-native';
+import {
+    View, Text, Image, ActivityIndicator, Alert,
+    StyleSheet, ScrollView, TouchableOpacity
+} from 'react-native';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import Apis, { endpoints, authApis } from '../../configs/Apis';
 import { MyUserContext } from '../../configs/MyContexts';
@@ -13,50 +16,37 @@ const RoomDetails = ({ route, navigation }) => {
     const [room, setRoom] = useState(null);
     const [loading, setLoading] = useState(true);
     const user = useContext(MyUserContext) || {};
+    const { width } = useWindowDimensions();
 
     useEffect(() => {
         const loadRoom = async () => {
             try {
                 let res = await Apis.get(`${endpoints['rooms']}${RoomId}/`);
                 setRoom(res.data);
-                console.log(res.data);
-                console.log("Dữ liệu phòng:", res.data.id);
-                console.log(await AsyncStorage.getItem("token"));
             } catch (err) {
                 console.error(err);
             } finally {
                 setLoading(false);
             }
         };
-
         loadRoom();
     }, [RoomId]);
 
     const handleBooking = async () => {
         const token = await AsyncStorage.getItem("token");
-        console.log(token);
+
         if (!token) {
-                Alert.alert("Chưa đăng nhập", "Bạn cần đăng nhập để đăng ký phòng.", [
+            Alert.alert("Chưa đăng nhập", "Bạn cần đăng nhập để đăng ký phòng.", [
                 { text: "Hủy", style: "cancel" },
                 { text: "Đăng nhập", onPress: () => navigation.navigate("login") }
             ]);
-            return false;
+            return;
         }
 
         try {
-
-            // 🔍 Kiểm tra xem user đã có phòng chưa
-            // let existingRoomRes = await authApis(token).get(endpoints['my-room']);
-            // console.log(existingRoomRes.data.id);
-            // if (existingRoomRes.data && existingRoomRes.data.id) {
-            //     Alert.alert("Thông báo", "Bạn đã đăng ký phòng trước đó. Không thể đăng ký thêm.");
-            //     return;
-            // }
-            
             let res = await authApis(token).post(endpoints['register-room'], {
                 room: room.id
             });
-
             Alert.alert("Thành công", `Bạn đã đăng ký phòng: ${room.name}`);
         } catch (err) {
             if (err.response?.status === 400) {
@@ -67,76 +57,111 @@ const RoomDetails = ({ route, navigation }) => {
         }
     };
 
-    const {width} = useWindowDimensions();
-
-    if (loading) return <ActivityIndicator style={{ flex: 1 }} />;
+    if (loading) return <ActivityIndicator style={{ flex: 1 }} size="large" color="#2196F3" />;
 
     return (
-        <ScrollView style={MyStyles.container}>
+        <ScrollView style={styles.container}>
             <Image source={{ uri: room?.image }} style={styles.image} />
 
-            <View style={styles.infoContainer}>
+            <View style={styles.card}>
                 <Text style={styles.title}>{room?.name}</Text>
 
-                <View style={styles.metaInfo}>
+                <View style={styles.infoRow}>
                     <FontAwesome5 name={room.gender_restriction === 'male' ? 'male' : 'female'} size={20} color="#555" />
-                    <Text style={styles.metaText}>
-                        {room.gender_restriction === 'male' ? 'Nam' : 'Nữ'}
+                    <Text style={styles.infoText}>
+                        {room.gender_restriction === 'male' ? 'Phòng nam' : 'Phòng nữ'}
                     </Text>
 
-                    <MaterialIcons name="people" size={20} color="#555" style={{ marginLeft: 16 }} />
-                    <Text style={styles.metaText}>
-                        {room.current_students}/{room.capacity} sinh viên
+                    <MaterialIcons name="people" size={20} color="#555" style={{ marginLeft: 20 }} />
+                    <Text style={styles.infoText}>
+                        {room.current_students}/{room.capacity} SV
                     </Text>
                 </View>
 
-                <View style={{ marginTop: 10 }}>
+                <View style={styles.descriptionBox}>
+                    <Text style={styles.descriptionTitle}>📋 Mô tả phòng</Text>
                     <RenderHTML
                         contentWidth={width}
                         source={{ html: room?.description || "<p>Không có mô tả</p>" }}
                     />
                 </View>
-            </View>
 
-            <View style={styles.buttonContainer}>
-                <Button
-                    title={room?.available_capacity > 0 ? "📥 Đăng ký phòng" : "❌ Phòng đã đầy"}
+                <TouchableOpacity
+                    style={[
+                        styles.button,
+                        { backgroundColor: room.available_capacity > 0 ? "#2196F3" : "#ccc" }
+                    ]}
                     onPress={handleBooking}
-                    disabled={room?.available_capacity <= 0}
-                    color={room?.available_capacity > 0 ? "#2196F3" : "#9E9E9E"}
-                />
+                    disabled={room.available_capacity <= 0}
+                >
+                    <Text style={styles.buttonText}>
+                        {room.available_capacity > 0 ? "📥 Đăng ký phòng" : "❌ Phòng đã đầy"}
+                    </Text>
+                </TouchableOpacity>
             </View>
         </ScrollView>
     );
 };
 
 const styles = StyleSheet.create({
+    container: {
+        backgroundColor: '#f2f2f2',
+    },
     image: {
         width: '100%',
         height: 220,
-        borderBottomLeftRadius: 10,
-        borderBottomRightRadius: 10
+        borderBottomLeftRadius: 16,
+        borderBottomRightRadius: 16,
     },
-    infoContainer: {
+    card: {
+        backgroundColor: '#fff',
+        margin: 16,
+        borderRadius: 12,
         padding: 16,
+        shadowColor: '#000',
+        shadowOpacity: 0.1,
+        shadowOffset: { width: 0, height: 2 },
+        shadowRadius: 6,
+        elevation: 3,
     },
     title: {
-        fontSize: 22,
+        fontSize: 24,
         fontWeight: 'bold',
         marginBottom: 10,
+        color: '#333',
     },
-    metaInfo: {
+    infoRow: {
         flexDirection: 'row',
         alignItems: 'center',
         marginBottom: 10,
     },
-    metaText: {
+    infoText: {
         fontSize: 16,
-        marginLeft: 4,
+        marginLeft: 6,
+        color: '#555',
     },
-    buttonContainer: {
-        paddingHorizontal: 16,
-        marginBottom: 20,
+    descriptionBox: {
+        backgroundColor: '#f9f9f9',
+        borderRadius: 8,
+        padding: 10,
+        marginTop: 10,
     },
+    descriptionTitle: {
+        fontWeight: '600',
+        fontSize: 16,
+        marginBottom: 6,
+    },
+    button: {
+        marginTop: 20,
+        paddingVertical: 12,
+        borderRadius: 8,
+        alignItems: 'center',
+    },
+    buttonText: {
+        color: 'white',
+        fontSize: 16,
+        fontWeight: '600',
+    }
 });
+
 export default RoomDetails;

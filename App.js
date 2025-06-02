@@ -1,64 +1,126 @@
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
-import MyUserReducer from "./reducers/MyUserReducer";
-import Home from "./components/Home/Home";
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Icon } from "react-native-paper";
-import Rooms from "./components/Home/Rooms";
+import { useContext, useReducer } from 'react';
+
+import MyUserReducer from "./reducers/MyUserReducer";
+import { MyDispatchContext, MyUserContext } from "./configs/MyContexts";
+import AdminPanel from "./components/Admin/AdminPanel";
+import Home from "./components/Home/Home";
 import RoomDetails from "./components/Home/RoomDetails";
+import Rooms from "./components/Home/Rooms";
 import Login from "./components/User/Login";
 import Register from "./components/User/Register";
 import Profile from "./components/User/Profile";
-import { useContext, useReducer } from 'react';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { MyDispatchContext, MyUserContext } from "./configs/MyContexts";
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+const HomeStack = createNativeStackNavigator();
+const HomeStackScreen = () => (
+  <HomeStack.Navigator>
+    <HomeStack.Screen name="Home" component={Home} options={{ title: "Ký túc xá sinh viên" }} />
+    <HomeStack.Screen name="RoomDetail" component={RoomDetails} options={{ title: "Chi tiết phòng" }} />
+  </HomeStack.Navigator>
+);
 
-const Stack = createNativeStackNavigator();
-const StackNavigator = () => {
-  return (
-    <Stack.Navigator>
-      <Stack.Screen name="home" component={Home} options={{title: "Danh sách phòng KTX"}}/>
-      {/* <Stack.Screen name="Rooms" component={Rooms} options={{title: "Phòng đang ở"}}/> */}
-      <Stack.Screen name="RoomDetail" component={RoomDetails} options={{title: "Chi tiết phòng"}} />
-    </Stack.Navigator>
-  );
-}
-  // <Tab.Screen name="home" component={Home} options={{title: "Danh sách phòng KTX"}}/>
-   
-  // <Tab.Screen name="room-detail" component={RoomDetails} options={{title: "Chi tiết phòng"}} />
-  //  <Tab.Screen name="room" component={Room} options={{title: "Phòng đang ở"}}/>
 const Tab = createBottomTabNavigator();
 
 const TabNavigator = () => {
   const user = useContext(MyUserContext);
 
+  const isAdmin = user?.role === 'admin' || false; // hoặc user?.role === 'admin'
+  const insets = useSafeAreaInsets(); // ✅ Thêm dòng này
   return (
-    <Tab.Navigator>
-      <Tab.Screen name="index" component={StackNavigator} options={{title: "Ký túc xá sinh viên",tabBarIcon: () => <Icon source="home" size={20} />}}  />
+    <Tab.Navigator
+      screenOptions={{
+        headerShown: false,
+        tabBarActiveTintColor: "#2e86de",
+        tabBarLabelStyle: { fontSize: 13 },
+         tabBarStyle: {
+          paddingVertical: 4,
+          height: 60 + insets.bottom,
+          paddingBottom: insets.bottom || 6, 
+        },
+      }}
+    >
+      <Tab.Screen
+        name="index"
+        component={HomeStackScreen}
+        options={{
+          title: "Trang chủ",
+          tabBarIcon: ({ color }) => <Icon source="home" color={color} size={22} />,
+        }}
+      />
 
-      {user === null?<>
-        <Tab.Screen name="login" component={Login} options={{title: "Đăng nhập",tabBarIcon: () => <Icon source="account" size={20} />}} />
-        <Tab.Screen name="register" component={Register} options={{title: "Đăng ký", tabBarIcon: () => <Icon source="account-plus" size={20} />}} />
-      </>:<>
-        <Tab.Screen name="Rooms" component={Rooms} options={{title: "Phòng đang ở"}}/>
-        <Tab.Screen name="profile" component={Profile} options={{title: "Tài khoản",tabBarIcon: () => <Icon source="account" size={20} />}} />
-      </>}
-      
+      {user === null ? (
+        <>
+          <Tab.Screen
+            name="login"
+            component={Login}
+            options={{
+              title: "Đăng nhập",
+              tabBarIcon: ({ color }) => <Icon source="login" color={color} size={22} />,
+            }}
+          />
+        </>
+      ) : (
+        <>
+          <Tab.Screen
+            name="Rooms"
+            component={Rooms}
+            options={{
+              title: "Phòng của tôi",
+              tabBarIcon: ({ color }) => <Icon source="door" color={color} size={22} />,
+            }}
+          />
+          <Tab.Screen
+            name="profile"
+            component={Profile}
+            options={{
+              title: "Tài khoản",
+              tabBarIcon: ({ color }) => <Icon source="account-circle" color={color} size={22} />,
+            }}
+          />
+          {/* Quản trị viên sẽ thấy thêm mục này */}
+          {isAdmin && (
+              <>
+              <Tab.Screen
+                name="AdminPanel"
+                component={AdminPanel}
+                options={{
+                  title: "Quản trị",
+                  tabBarIcon: ({ color }) => <Icon source="shield-account" color={color} size={22} />,
+                }}
+              />
+              <Tab.Screen
+              name="register"
+              component={Register}
+              options={{
+                title: "Tạo tài khoản",
+                tabBarIcon: ({ color }) => <Icon source="account-plus" color={color} size={22} />,
+              }}
+              />
+            </>
+          )}
+        </>
+      )}
     </Tab.Navigator>
   );
-}
+};
+
 const App = () => {
   const [user, dispatch] = useReducer(MyUserReducer, null);
 
   return (
+    <SafeAreaProvider>
     <MyUserContext.Provider value={user}>
       <MyDispatchContext.Provider value={dispatch}>
         <NavigationContainer>
-        
-            <TabNavigator />
-          
+          <TabNavigator />
         </NavigationContainer>
       </MyDispatchContext.Provider>
     </MyUserContext.Provider>
+     </SafeAreaProvider>
   );
 };
 
