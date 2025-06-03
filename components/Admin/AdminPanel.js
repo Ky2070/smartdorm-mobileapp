@@ -14,8 +14,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // ⚠️ Tạm thời để các screen đang *chưa có* trong project
 const availableScreens = {
-  UserManagement: false,
-  RoomManagement: false,
+  UserManagement: true,
+  RoomManagement: true,
   InvoiceManagement: false,
   SupportRequests: false,
 };

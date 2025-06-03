@@ -7,6 +7,7 @@ import { useContext, useReducer } from 'react';
 import MyUserReducer from "./reducers/MyUserReducer";
 import { MyDispatchContext, MyUserContext } from "./configs/MyContexts";
 import AdminPanel from "./components/Admin/AdminPanel";
+import UserManagementScreen from "./components/Admin/UserManagementScreen";
 import Home from "./components/Home/Home";
 import RoomDetails from "./components/Home/RoomDetails";
 import Rooms from "./components/Home/Rooms";
@@ -15,6 +16,8 @@ import Register from "./components/User/Register";
 import Profile from "./components/User/Profile";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import RoomManagementScreen from "./components/Admin/RoomManagementScreen";
+
 const HomeStack = createNativeStackNavigator();
 const HomeStackScreen = () => (
   <HomeStack.Navigator>
@@ -23,12 +26,22 @@ const HomeStackScreen = () => (
   </HomeStack.Navigator>
 );
 
+const AdminStack = createNativeStackNavigator();
+const AdminStackScreen = () => (
+  <AdminStack.Navigator>
+    <AdminStack.Screen name="AdminPanel" component={AdminPanel} options={{title: "Bảng điều khiển"}}/>
+    <AdminStack.Screen name="UserManagement" component={UserManagementScreen} options={{title: "Quản lý người dùng"}}/>
+    <AdminStack.Screen name="RoomManagement" component={RoomManagementScreen} options={{title: "Quản lý phòng ở"}}/>
+  </AdminStack.Navigator>
+);
+
 const Tab = createBottomTabNavigator();
 
 const TabNavigator = () => {
   const user = useContext(MyUserContext);
 
   const isAdmin = user?.role === 'admin' || false; // hoặc user?.role === 'admin'
+  const isStudent = user?.role === 'student' || false;
   const insets = useSafeAreaInsets(); // ✅ Thêm dòng này
   return (
     <Tab.Navigator
@@ -65,14 +78,16 @@ const TabNavigator = () => {
         </>
       ) : (
         <>
-          <Tab.Screen
-            name="Rooms"
-            component={Rooms}
-            options={{
-              title: "Phòng của tôi",
-              tabBarIcon: ({ color }) => <Icon source="door" color={color} size={22} />,
-            }}
-          />
+          {isStudent && (
+            <Tab.Screen
+              name="Rooms"
+              component={Rooms}
+              options={{
+                title: "Phòng của tôi",
+                tabBarIcon: ({ color }) => <Icon source="door" color={color} size={22} />,
+              }}
+            />
+          )}
           <Tab.Screen
             name="profile"
             component={Profile}
@@ -85,8 +100,8 @@ const TabNavigator = () => {
           {isAdmin && (
               <>
               <Tab.Screen
-                name="AdminPanel"
-                component={AdminPanel}
+                name="Admin"
+                component={AdminStackScreen}
                 options={{
                   title: "Quản trị",
                   tabBarIcon: ({ color }) => <Icon source="shield-account" color={color} size={22} />,

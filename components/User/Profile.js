@@ -14,6 +14,15 @@ const Profile = () => {
     nav.navigate("index");
   };
 
+  const handleGoToRooms = () => {
+    nav.navigate('Rooms');
+  };
+
+  console.log("Thông tin user:", user);
+
+  const isAdmin = user?.role === "admin";
+  const isStudent = user?.role === "student";
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#f0f4f7" }}>
       <ScrollView
@@ -92,14 +101,14 @@ const Profile = () => {
           </View>
 
           <View style={{ marginBottom: 8 }}>
-            <Text style={{ fontWeight: "600", color: "#555" }}>Số điện thoại</Text>
-            <Text style={{ color: "#333", fontSize: 16 }}>{user?.phone || "Chưa cập nhật"}</Text>
+            <Text style={{ fontWeight: "600", color: "#555" }}>Giới tính</Text>
+            <Text style={{ color: "#333", fontSize: 16 }}>{user?.gender === 'male' ? "Nam" : "Nữ"}</Text>
           </View>
 
           <View style={{ marginBottom: 8 }}>
             <Text style={{ fontWeight: "600", color: "#555" }}>Vai trò</Text>
             <Text style={{ color: "#333", fontSize: 16 }}>
-              {user?.role || "Sinh viên"}
+              {user?.role === "admin" ? "Quản trị viên" : "Sinh viên"}
             </Text>
           </View>
         </View>
@@ -113,19 +122,21 @@ const Profile = () => {
         >
           Cập nhật hồ sơ
         </Button>
+          {isStudent && (
+            <Button
+              mode="outlined"
+              style={{ borderRadius: 24, paddingVertical: 6 }}
+              contentStyle={{ height: 44 }}
+              onPress={handleGoToRooms}
+            >
+            Phòng của tôi
+          </Button>
+          )}
+        
 
         <Button
           mode="outlined"
-          style={{ borderRadius: 24, paddingVertical: 6 }}
-          contentStyle={{ height: 44 }}
-          onPress={() => nav.navigate("Rooms")}
-        >
-          Phòng của tôi
-        </Button>
-
-        <Button
-          mode="text"
-          style={{ marginTop: 24 }}
+          style={{ borderRadius: 20, marginTop: 24 }}
           onPress={logout}
           textColor="#d32f2f"
         >

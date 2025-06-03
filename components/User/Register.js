@@ -79,7 +79,7 @@ const Register = () => {
       setMsg("Không thể xác thực. Vui lòng đăng nhập lại!");
       return;
       }
-
+      console.log("Token:", token); // DEBUG
       let form = new FormData();
 
       for (let key in user) {
