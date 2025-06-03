@@ -56,7 +56,6 @@ const RoomDetails = ({ route, navigation }) => {
             }
         }
     };
-
     if (loading) return <ActivityIndicator style={{ flex: 1 }} size="large" color="#2196F3" />;
 
     return (

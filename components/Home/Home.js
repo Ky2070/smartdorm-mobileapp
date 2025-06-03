@@ -19,7 +19,7 @@ const RoomCard = ({ item, onPress }) => {
 
   const onPressIn = () => {
     Animated.spring(scaleAnim, {
-      toValue: 0.95,
+      toValue: 0.65,
       useNativeDriver: true,
     }).start();
   };

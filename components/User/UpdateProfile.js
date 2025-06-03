@@ -20,22 +20,18 @@ const UpdateProfile = () => {
 
   const pickImage = async () => {
     const permissionResult = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (permissionResult.granted === false) {
+    if (!permissionResult.granted) {
       Alert.alert("❌ Lỗi", "Bạn cần cấp quyền truy cập thư viện ảnh!");
       return;
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      quality: 1,
-    });
+    const result = await ImagePicker.launchImageLibraryAsync();
 
-    if (!result.cancelled) {
-      setAvatar(result.assets[0]); // Expo SDK 49+
+    if (!result.canceled && result.assets && result.assets.length > 0) {
+      setAvatar(result.assets[0]);
     }
   };
-
+  console.log(user.username);
   const handleUpdate = async () => {
     try {
       const token = await AsyncStorage.getItem("token");
@@ -55,10 +51,9 @@ const UpdateProfile = () => {
         });
       }
 
-      const res = await api.put(`/users/${user.id}/update-profile/`, formData, {
+      const res = await api.patch(`/users/${user.id}/update-profile/`, formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
-
       if (res.status === 200) {
         Alert.alert('✅ Thành công', 'Hồ sơ đã được cập nhật.');
 

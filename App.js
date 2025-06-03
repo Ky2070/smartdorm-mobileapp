@@ -17,12 +17,14 @@ import Profile from "./components/User/Profile";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import RoomManagementScreen from "./components/Admin/RoomManagementScreen";
+import UpdateProfile from "./components/User/UpdateProfile";
 
 const HomeStack = createNativeStackNavigator();
 const HomeStackScreen = () => (
   <HomeStack.Navigator>
     <HomeStack.Screen name="Home" component={Home} options={{ title: "Ký túc xá sinh viên" }} />
     <HomeStack.Screen name="RoomDetail" component={RoomDetails} options={{ title: "Chi tiết phòng" }} />
+    <HomeStack.Screen name="UpdateProfile" component={UpdateProfile} options={{title: "Cập nhật thông tin"}} />
   </HomeStack.Navigator>
 );
 
@@ -35,14 +37,22 @@ const AdminStackScreen = () => (
   </AdminStack.Navigator>
 );
 
+const ProfileStack = createNativeStackNavigator();
+const ProfileStackScreen = () => (
+  <ProfileStack.Navigator>
+    <ProfileStack.Screen name="ProfileMain" component={Profile} options={{ title: "Tài khoản" }} />
+    <ProfileStack.Screen name="UpdateProfile" component={UpdateProfile} options={{ title: "Cập nhật hồ sơ" }} />
+  </ProfileStack.Navigator>
+);
+
 const Tab = createBottomTabNavigator();
 
 const TabNavigator = () => {
   const user = useContext(MyUserContext);
 
-  const isAdmin = user?.role === 'admin' || false; // hoặc user?.role === 'admin'
+  const isAdmin = user?.role === 'admin' || false; 
   const isStudent = user?.role === 'student' || false;
-  const insets = useSafeAreaInsets(); // ✅ Thêm dòng này
+  const insets = useSafeAreaInsets(); 
   return (
     <Tab.Navigator
       screenOptions={{
@@ -90,7 +100,7 @@ const TabNavigator = () => {
           )}
           <Tab.Screen
             name="profile"
-            component={Profile}
+            component={ProfileStackScreen}
             options={{
               title: "Tài khoản",
               tabBarIcon: ({ color }) => <Icon source="account-circle" color={color} size={22} />,
