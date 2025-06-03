@@ -1,56 +1,49 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity, Animated, Dimensions
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const { width } = Dimensions.get('window');
-
-const screens = [
-  {
-    title: 'Chào mừng bạn!',
-    desc: 'Đây là ứng dụng quản lý ký túc xá sinh viên.',
-  },
-  {
-    title: 'Quản lý tiện lợi',
-    desc: 'Bạn có thể đăng ký phòng, xem hóa đơn, và nhiều hơn nữa.',
-  }
-];
+const { width, height } = Dimensions.get('window');
 
 const OnboardingScreen = ({ navigation }) => {
-  const [step, setStep] = useState(0);
-  const translateX = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideUpAnim = useRef(new Animated.Value(50)).current;
 
-  const handleNext = () => {
-    if (step === screens.length - 1) {
-      navigation.replace('MainApp');
-    } else {
-      Animated.timing(translateX, {
-        toValue: -(step + 1) * width,
-        duration: 300,
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 800,
         useNativeDriver: true,
-      }).start();
-      setStep(step + 1);
-    }
+      }),
+      Animated.timing(slideUpAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, []);
+
+  const handleStart = async () => {
+    await AsyncStorage.setItem('hasSeenOnboarding', 'true');
+    navigation.replace('MainApp');
   };
 
   return (
     <View style={styles.container}>
-      <Animated.View style={[styles.slider, {
-        width: width * screens.length,
-        transform: [{ translateX }],
+      <Animated.View style={[styles.content, {
+        opacity: fadeAnim,
+        transform: [{ translateY: slideUpAnim }]
       }]}>
-        {screens.map((screen, index) => (
-          <View key={index} style={[styles.slide, { width }]}>
-            <Text style={styles.title}>{screen.title}</Text>
-            <Text style={styles.desc}>{screen.desc}</Text>
-          </View>
-        ))}
+        <Text style={styles.title}>Chào mừng bạn!</Text>
+        <Text style={styles.desc}>
+          Đây là ứng dụng quản lý ký túc xá sinh viên. Bạn có thể đăng ký phòng, xem hóa đơn, và nhiều hơn nữa.
+        </Text>
       </Animated.View>
 
-      <TouchableOpacity style={styles.button} onPress={handleNext}>
-        <Text style={styles.buttonText}>
-          {step === screens.length - 1 ? 'Bắt đầu ngay' : 'Tiếp tục'}
-        </Text>
+      <TouchableOpacity style={styles.button} onPress={handleStart}>
+        <Text style={styles.buttonText}>Bắt đầu ngay</Text>
       </TouchableOpacity>
     </View>
   );
@@ -60,25 +53,40 @@ export default OnboardingScreen;
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#fff'
+    flex: 1,
+    backgroundColor: '#fff',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 24,
   },
-  slider: {
-    flexDirection: 'row', flexGrow: 0,
-  },
-  slide: {
-    justifyContent: 'center', alignItems: 'center', paddingHorizontal: 20,
+  content: {
+    alignItems: 'center',
   },
   title: {
-    fontSize: 28, fontWeight: 'bold', marginBottom: 20, textAlign: 'center'
+    fontSize: 32,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    textAlign: 'center',
+    color: '#2e86de',
   },
   desc: {
-    fontSize: 16, textAlign: 'center'
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#555',
+    lineHeight: 24,
   },
   button: {
-    position: 'absolute', bottom: 60,
-    backgroundColor: '#2e86de', paddingVertical: 12, paddingHorizontal: 30, borderRadius: 8
+    position: 'absolute',
+    bottom: 60,
+    backgroundColor: '#2e86de',
+    paddingVertical: 14,
+    paddingHorizontal: 40,
+    borderRadius: 10,
+    elevation: 3,
   },
   buttonText: {
-    color: '#fff', fontSize: 16
+    color: '#fff',
+    fontSize: 17,
+    fontWeight: '600',
   }
 });

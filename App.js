@@ -3,7 +3,7 @@ import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Icon } from "react-native-paper";
 import { useContext, useReducer } from 'react';
-
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import MyUserReducer from "./reducers/MyUserReducer";
 import { MyDispatchContext, MyUserContext } from "./configs/MyContexts";
 import AdminPanel from "./components/Admin/AdminPanel";
@@ -18,6 +18,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import RoomManagementScreen from "./components/Admin/RoomManagementScreen";
 import UpdateProfile from "./components/User/UpdateProfile";
+
+import { useEffect, useState } from 'react';
+import { ActivityIndicator } from 'react-native';
+import OnboardingScreen from "./components/Animation/OnboardingScreen";
 
 const HomeStack = createNativeStackNavigator();
 const HomeStackScreen = () => (
@@ -133,18 +137,42 @@ const TabNavigator = () => {
   );
 };
 
+
+const RootStack = createNativeStackNavigator();
+
 const App = () => {
   const [user, dispatch] = useReducer(MyUserReducer, null);
 
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
+
+  useEffect(() => {
+    const checkOnboarding = async () => {
+      const seen = await AsyncStorage.getItem('hasSeenOnboarding');
+      setHasSeenOnboarding(!!seen);
+      setIsLoading(false);
+    };
+    checkOnboarding();
+  }, []);
+
+  if (isLoading) {
+    return <ActivityIndicator size="large" style={{ flex: 1 }} />;
+  }
+
   return (
     <SafeAreaProvider>
-    <MyUserContext.Provider value={user}>
-      <MyDispatchContext.Provider value={dispatch}>
-        <NavigationContainer>
-          <TabNavigator />
-        </NavigationContainer>
-      </MyDispatchContext.Provider>
-    </MyUserContext.Provider>
+      <MyUserContext.Provider value={user}>
+        <MyDispatchContext.Provider value={dispatch}>
+          <NavigationContainer>
+            <RootStack.Navigator
+              screenOptions={{ headerShown: false }}
+              initialRouteName={hasSeenOnboarding ? "MainApp" : "Onboarding"}>
+              <RootStack.Screen name="Onboarding" component={OnboardingScreen} />
+              <RootStack.Screen name="MainApp" component={TabNavigator} />
+            </RootStack.Navigator>
+          </NavigationContainer>
+        </MyDispatchContext.Provider>
+      </MyUserContext.Provider>
      </SafeAreaProvider>
   );
 };
