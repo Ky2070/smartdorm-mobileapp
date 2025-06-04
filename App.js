@@ -148,8 +148,8 @@ const App = () => {
 
   useEffect(() => {
     const checkOnboarding = async () => {
-      const seen = await AsyncStorage.getItem('hasSeenOnboarding');
-      setHasSeenOnboarding(!!seen);
+      // const seen = await AsyncStorage.getItem('hasSeenOnboarding');
+      setHasSeenOnboarding(false);
       setIsLoading(false);
     };
     checkOnboarding();

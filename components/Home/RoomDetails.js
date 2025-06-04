@@ -1,8 +1,10 @@
 import React, { useEffect, useState, useContext } from 'react';
 import {
     View, Text, Image, ActivityIndicator, Alert,
-    StyleSheet, ScrollView, TouchableOpacity
+    StyleSheet, ScrollView, TouchableOpacity, Platform
 } from 'react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+import { Menu, Button, Provider } from 'react-native-paper';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import Apis, { endpoints, authApis } from '../../configs/Apis';
 import { MyUserContext } from '../../configs/MyContexts';
@@ -15,6 +17,13 @@ const RoomDetails = ({ route, navigation }) => {
     const { RoomId } = route.params;
     const [room, setRoom] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [packageMonths, setPackageMonths] = useState(1);
+    const [startDate, setStartDate] = useState(new Date());
+    const [endDate, setEndDate] = useState(new Date());
+    const [showStartPicker, setShowStartPicker] = useState(false);
+    const [showEndPicker, setShowEndPicker] = useState(false);
+    const [menuVisible, setMenuVisible] = useState(false);
+    
     const user = useContext(MyUserContext) || {};
     const { width } = useWindowDimensions();
 
@@ -32,6 +41,12 @@ const RoomDetails = ({ route, navigation }) => {
         loadRoom();
     }, [RoomId]);
 
+    useEffect(() => {
+        const newEndDate = new Date(startDate);
+        newEndDate.setMonth(startDate.getMonth() + parseInt(packageMonths));
+        setEndDate(newEndDate);
+    }, [packageMonths, startDate]);
+
     const handleBooking = async () => {
         const token = await AsyncStorage.getItem("token");
 
@@ -45,7 +60,9 @@ const RoomDetails = ({ route, navigation }) => {
 
         try {
             let res = await authApis(token).post(endpoints['register-room'], {
-                room: room.id
+                room: room.id,
+                start_date: startDate.toISOString().split("T")[0],
+                end_date: endDate.toISOString().split("T")[0],
             });
             Alert.alert("Thành công", `Bạn đã đăng ký phòng: ${room.name}`);
         } catch (err) {
@@ -56,6 +73,7 @@ const RoomDetails = ({ route, navigation }) => {
             }
         }
     };
+
     if (loading) return <ActivityIndicator style={{ flex: 1 }} size="large" color="#2196F3" />;
 
     return (
@@ -85,6 +103,67 @@ const RoomDetails = ({ route, navigation }) => {
                     />
                 </View>
 
+                {/* GÓI ĐẶT */}
+                <View style={{ marginTop: 20 }}>
+                <Text style={{ fontWeight: '600', marginBottom: 6 }}>🎯 Chọn gói thuê:</Text>
+                <Menu
+                    visible={menuVisible}
+                    onDismiss={() => setMenuVisible(false)}
+                    anchor={
+                    <Button mode="outlined" onPress={() => setMenuVisible(true)}>
+                        {`${packageMonths} tháng`}
+                    </Button>
+                    }
+                >
+                    {[1, 3, 6, 12].map((month) => (
+                    <Menu.Item
+                        key={month}
+                        onPress={() => {
+                        setPackageMonths(month);
+                        setMenuVisible(false);
+                        }}
+                        title={`${month} tháng`}
+                    />
+                    ))}
+                </Menu>
+                </View>
+
+                {/* DATE PICKERS */}
+                <View style={{ marginTop: 16 }}>
+                    <Text style={{ fontWeight: '600' }}>📅 Ngày bắt đầu:</Text>
+                    <TouchableOpacity onPress={() => setShowStartPicker(true)}>
+                        <Text style={styles.dateBox}>{startDate.toLocaleDateString()}</Text>
+                    </TouchableOpacity>
+                    {showStartPicker && (
+                        <DateTimePicker
+                            value={startDate}
+                            mode="date"
+                            display="default"
+                            onChange={(event, selectedDate) => {
+                                setShowStartPicker(false);
+                                if (selectedDate) setStartDate(selectedDate);
+                            }}
+                        />
+                    )}
+
+                    <Text style={{ fontWeight: '600', marginTop: 10 }}>📆 Ngày kết thúc:</Text>
+                    <TouchableOpacity onPress={() => setShowEndPicker(true)}>
+                        <Text style={styles.dateBox}>{endDate.toLocaleDateString()}</Text>
+                    </TouchableOpacity>
+                    {showEndPicker && (
+                        <DateTimePicker
+                            value={endDate}
+                            mode="date"
+                            display="default"
+                            onChange={(event, selectedDate) => {
+                                setShowEndPicker(false);
+                                if (selectedDate) setEndDate(selectedDate);
+                            }}
+                        />
+                    )}
+                </View>
+
+                {/* BUTTON */}
                 <TouchableOpacity
                     style={[
                         styles.button,
@@ -103,15 +182,8 @@ const RoomDetails = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-    container: {
-        backgroundColor: '#f2f2f2',
-    },
-    image: {
-        width: '100%',
-        height: 220,
-        borderBottomLeftRadius: 16,
-        borderBottomRightRadius: 16,
-    },
+    container: { backgroundColor: '#f2f2f2' },
+    image: { width: '100%', height: 220, borderBottomLeftRadius: 16, borderBottomRightRadius: 16 },
     card: {
         backgroundColor: '#fff',
         margin: 16,
@@ -123,32 +195,23 @@ const styles = StyleSheet.create({
         shadowRadius: 6,
         elevation: 3,
     },
-    title: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        marginBottom: 10,
-        color: '#333',
-    },
-    infoRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 10,
-    },
-    infoText: {
-        fontSize: 16,
-        marginLeft: 6,
-        color: '#555',
-    },
+    title: { fontSize: 24, fontWeight: 'bold', marginBottom: 10, color: '#333' },
+    infoRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
+    infoText: { fontSize: 16, marginLeft: 6, color: '#555' },
     descriptionBox: {
         backgroundColor: '#f9f9f9',
         borderRadius: 8,
         padding: 10,
         marginTop: 10,
     },
-    descriptionTitle: {
-        fontWeight: '600',
+    descriptionTitle: { fontWeight: '600', fontSize: 16, marginBottom: 6 },
+    dateBox: {
+        backgroundColor: '#e6e6e6',
+        padding: 10,
+        borderRadius: 8,
+        marginTop: 4,
         fontSize: 16,
-        marginBottom: 6,
+        color: '#333',
     },
     button: {
         marginTop: 20,
@@ -160,7 +223,7 @@ const styles = StyleSheet.create({
         color: 'white',
         fontSize: 16,
         fontWeight: '600',
-    }
+    },
 });
 
 export default RoomDetails;

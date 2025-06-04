@@ -100,7 +100,7 @@ const Login = () => {
           {/* Logo hoặc hình minh họa */}
           <View style={{ alignItems: "center", marginBottom: 32 }}>
             <Image
-              source={require("../../assets/favicon.png")} // Thay bằng ảnh logo app của bạn
+              source={require("../../assets/welcome.png")} // Thay bằng ảnh logo app của bạn
               style={{ width: 120, height: 120, borderRadius: 60 }}
               resizeMode="contain"
             />
