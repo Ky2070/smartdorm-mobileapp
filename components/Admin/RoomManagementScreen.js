@@ -42,35 +42,57 @@ const RoomManagementScreen = () => {
       const res = await api.get(endpoints['register-room']);
       setRegistrations(res.data);
 
-      const fakeChangeRequests = Array.from({ length: 8 }, (_, i) => ({
-        id: 100 + i,
-        student_name: `Sinh viên ${i + 11}`,
-        from_room: `Phòng ${200 + i}`,
-        to_room: `Phòng ${300 + i}`,
-        reason: "Lý do chuyển phòng mẫu",
-        status: i % 2 === 0 ? "pending" : "approved",
-      }));
+      const swapRes = await api.get(endpoints['list-swap']);
+      setChangeRequests(swapRes.data); 
 
-      setChangeRequests(fakeChangeRequests);
     } catch (error) {
-      console.error("Lỗi lấy dữ liệu thật:", error);
-      Alert.alert("Lỗi", "Không thể tải danh sách đăng ký phòng.");
+      console.error("Lỗi lấy dữ liệu:", error);
+      Alert.alert("Lỗi", "Không thể tải dữ liệu từ server.");
     } finally {
       setLoading(false);
     }
   };
 
+  const updateSwapStatus = async (id, action) => {
+    const token = await AsyncStorage.getItem("token");
+    const api = authApis(token);
+
+    try {
+      const url = `${endpoints['room-swap']}${id}/${action}/`; // vd: /room-swap/2/approve/
+      await api.put(url);
+      Alert.alert("Thành công", `Yêu cầu đã được ${action === "approve" ? "duyệt" : "từ chối"}.`);
+      fetchData(); // Làm mới danh sách
+    } catch (error) {
+      console.error("Lỗi khi cập nhật trạng thái:", error);
+      Alert.alert("Lỗi", `Không thể ${action === "approve" ? "duyệt" : "từ chối"} yêu cầu.`);
+    }
+  };
+
   const handleApprove = (id) => {
-    Alert.alert("Duyệt", `Yêu cầu ${id} đã được duyệt.`);
-    setChangeRequests((prev) =>
-      prev.map((req) => (req.id === id ? { ...req, status: "approved" } : req))
+    Alert.alert(
+      "Xác nhận duyệt",
+      "Bạn có chắc chắn muốn duyệt yêu cầu này?",
+      [
+        { text: "Hủy", style: "cancel" },
+        {
+          text: "Duyệt",
+          onPress: () => updateSwapStatus(id, "approve"),
+        },
+      ]
     );
   };
 
   const handleReject = (id) => {
-    Alert.alert("Từ chối", `Yêu cầu ${id} đã bị từ chối.`);
-    setChangeRequests((prev) =>
-      prev.map((req) => (req.id === id ? { ...req, status: "rejected" } : req))
+    Alert.alert(
+      "Xác nhận từ chối",
+      "Bạn có chắc chắn muốn từ chối yêu cầu này?",
+      [
+        { text: "Hủy", style: "cancel" },
+        {
+          text: "Từ chối",
+          onPress: () => updateSwapStatus(id, "reject"),
+        },
+      ]
     );
   };
 

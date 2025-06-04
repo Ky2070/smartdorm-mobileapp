@@ -14,18 +14,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // ⚠️ Tạm thời để các screen đang *chưa có* trong project
 const availableScreens = {
-  UserManagement: true,
   RoomManagement: true,
   InvoiceManagement: false,
   SupportRequests: false,
 };
 
 const menuItems = [
-  {
-    icon: "account-multiple",
-    text: "Quản lý người dùng",
-    screen: "UserManagement",
-  },
   {
     icon: "office-building",
     text: "Quản lý phòng ở",

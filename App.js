@@ -2,12 +2,13 @@ import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { Icon } from "react-native-paper";
+import { Provider as PaperProvider } from 'react-native-paper';
 import { useContext, useReducer } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import MyUserReducer from "./reducers/MyUserReducer";
 import { MyDispatchContext, MyUserContext } from "./configs/MyContexts";
 import AdminPanel from "./components/Admin/AdminPanel";
-import UserManagementScreen from "./components/Admin/UserManagementScreen";
+
 import Home from "./components/Home/Home";
 import RoomDetails from "./components/Home/RoomDetails";
 import Rooms from "./components/Home/Rooms";
@@ -18,7 +19,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import RoomManagementScreen from "./components/Admin/RoomManagementScreen";
 import UpdateProfile from "./components/User/UpdateProfile";
-
+import RoomSwap from "./components/Home/RoomSwap";
 import { useEffect, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 import OnboardingScreen from "./components/Animation/OnboardingScreen";
@@ -36,7 +37,6 @@ const AdminStack = createNativeStackNavigator();
 const AdminStackScreen = () => (
   <AdminStack.Navigator>
     <AdminStack.Screen name="AdminPanel" component={AdminPanel} options={{title: "Bảng điều khiển"}}/>
-    <AdminStack.Screen name="UserManagement" component={UserManagementScreen} options={{title: "Quản lý người dùng"}}/>
     <AdminStack.Screen name="RoomManagement" component={RoomManagementScreen} options={{title: "Quản lý phòng ở"}}/>
   </AdminStack.Navigator>
 );
@@ -48,6 +48,14 @@ const ProfileStackScreen = () => (
     <ProfileStack.Screen name="UpdateProfile" component={UpdateProfile} options={{ title: "Cập nhật hồ sơ" }} />
   </ProfileStack.Navigator>
 );
+
+const RoomStack = createNativeStackNavigator();
+const RoomStackScreen = () => (
+  <RoomStack.Navigator>
+    <RoomStack.Screen name="Rooms" component={Rooms} options={{title: "Phòng của tôi"}} />
+    <RoomStack.Screen name="RoomSwap" component={RoomSwap} options={{title: "Đổi phòng"}} />
+  </RoomStack.Navigator>
+)
 
 const Tab = createBottomTabNavigator();
 
@@ -94,8 +102,8 @@ const TabNavigator = () => {
         <>
           {isStudent && (
             <Tab.Screen
-              name="Rooms"
-              component={Rooms}
+              name="room"
+              component={RoomStackScreen}
               options={{
                 title: "Phòng của tôi",
                 tabBarIcon: ({ color }) => <Icon source="door" color={color} size={22} />,
@@ -160,6 +168,7 @@ const App = () => {
   }
 
   return (
+  <PaperProvider>
     <SafeAreaProvider>
       <MyUserContext.Provider value={user}>
         <MyDispatchContext.Provider value={dispatch}>
@@ -174,6 +183,7 @@ const App = () => {
         </MyDispatchContext.Provider>
       </MyUserContext.Provider>
      </SafeAreaProvider>
+  </PaperProvider>
   );
 };
 

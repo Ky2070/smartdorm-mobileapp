@@ -7,11 +7,13 @@ export const endpoints = {
     'buildings': '/building/',
     'rooms': '/room/',
     'register-room': '/register-room/',
+    'room-swap': '/room-swap/',
     'invoices':'/invoices/',
     'login': '/o/token/',
     'register': '/users/',
     'current-user': '/users/current-user/',
     'my-room': '/users/my-room/',
+    'list-swap':'/room-swap/admin-list/',
 }
 
 export const authApis = (token) => {

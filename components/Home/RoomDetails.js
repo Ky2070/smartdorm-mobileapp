@@ -4,7 +4,7 @@ import {
     StyleSheet, ScrollView, TouchableOpacity, Platform
 } from 'react-native';
 import DateTimePicker from '@react-native-community/datetimepicker';
-import { Menu, Button, Provider } from 'react-native-paper';
+import { Picker } from '@react-native-picker/picker';
 import { FontAwesome5, MaterialIcons } from '@expo/vector-icons';
 import Apis, { endpoints, authApis } from '../../configs/Apis';
 import { MyUserContext } from '../../configs/MyContexts';
@@ -103,31 +103,31 @@ const RoomDetails = ({ route, navigation }) => {
                     />
                 </View>
 
-                {/* GÓI ĐẶT */}
+                 {/* GÓI ĐẶT - Picker */}
                 <View style={{ marginTop: 20 }}>
-                <Text style={{ fontWeight: '600', marginBottom: 6 }}>🎯 Chọn gói thuê:</Text>
-                <Menu
-                    visible={menuVisible}
-                    onDismiss={() => setMenuVisible(false)}
-                    anchor={
-                    <Button mode="outlined" onPress={() => setMenuVisible(true)}>
-                        {`${packageMonths} tháng`}
-                    </Button>
-                    }
-                >
-                    {[1, 3, 6, 12].map((month) => (
-                    <Menu.Item
-                        key={month}
-                        onPress={() => {
-                        setPackageMonths(month);
-                        setMenuVisible(false);
+                    <Text style={{ fontWeight: '600', marginBottom: 6 }}>🎯 Chọn gói thuê:</Text>
+                    <View
+                        style={{
+                            borderWidth: 1,
+                            borderColor: '#ccc',
+                            borderRadius: 8,
+                            overflow: 'hidden',
+                            backgroundColor: '#fff',
                         }}
-                        title={`${month} tháng`}
-                    />
-                    ))}
-                </Menu>
+                    >
+                        <Picker
+                            selectedValue={packageMonths}
+                            onValueChange={(itemValue) => setPackageMonths(itemValue)}
+                            mode="dropdown"
+                            style={{ height: 50 }}
+                        >
+                            {[1, 3, 6, 12].map((month) => (
+                                <Picker.Item key={month} label={`${month} tháng`} value={month} />
+                            ))}
+                        </Picker>
+                    </View>
                 </View>
-
+                
                 {/* DATE PICKERS */}
                 <View style={{ marginTop: 16 }}>
                     <Text style={{ fontWeight: '600' }}>📅 Ngày bắt đầu:</Text>

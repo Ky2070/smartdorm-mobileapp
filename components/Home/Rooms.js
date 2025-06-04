@@ -10,6 +10,7 @@ import {
   SafeAreaView,
   Animated,
   useWindowDimensions,
+  TouchableOpacity,
 } from 'react-native';
 import { MyUserContext } from '../../configs/MyContexts';
 import { authApis, endpoints } from '../../configs/Apis';
@@ -24,7 +25,7 @@ const Rooms = ({ navigation }) => {
   const user = useContext(MyUserContext);
   const [room, setRoom] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  const [swapRequest, setSwapRequest] = useState(null);
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(20)).current;
 
@@ -49,6 +50,14 @@ const Rooms = ({ navigation }) => {
         roomData.image = API_BASE_URL + roomData.image;
       }
       setRoom(roomData);
+
+      const swapRes = await api.get(endpoints['room-swap']);
+      if (swapRes.data && swapRes.data.length > 0) {
+        setSwapRequest(swapRes.data[0]); // chỉ lấy yêu cầu mới nhất
+        console.log(swapRes.data);
+      } else {
+        setSwapRequest(null);
+      }
     } catch (err) {
       Alert.alert("Bạn hiện tại chưa đăng ký phòng nào.");
     } finally {
@@ -83,6 +92,7 @@ const Rooms = ({ navigation }) => {
     <SafeAreaView style={[styles.safeArea, { paddingTop: insets.top, paddingBottom: insets.bottom }]}>
       <ScrollView contentContainerStyle={[styles.scrollContainer]}>
         {room ? (
+          <>
           <Animated.View style={[styles.card, { opacity, transform: [{ translateY }] }]}>
             <Image source={{ uri: room.image }} style={styles.image} />
             <View style={styles.infoContainer}>
@@ -99,8 +109,29 @@ const Rooms = ({ navigation }) => {
               </View>
 
               <RenderHTML contentWidth={width} source={{ html: room.description || "<p>Không có mô tả</p>" }} />
+
+              <TouchableOpacity
+                style={styles.swapButton}
+                onPress={() => navigation.navigate("RoomSwap", { currentRoomId: room.id })}>
+                <Text style={styles.swapButtonText}>Đổi phòng</Text>
+              </TouchableOpacity>
             </View>
           </Animated.View>
+          {/* Phần riêng biệt hiển thị trạng thái yêu cầu chuyển phòng */}
+        {swapRequest && (
+          <View style={[styles.swapStatusContainer]}>
+            <Text style={styles.swapStatusTitle}>Trạng thái yêu cầu chuyển phòng:</Text>
+            <Text style={styles.swapStatusText}>
+              {swapRequest.status === "pending" && "⏳ Đang chờ duyệt"}
+              {swapRequest.status === "approved" && "✅ Đã được duyệt"}
+              {swapRequest.status === "rejected" && "❌ Bị từ chối"}
+            </Text>
+            {swapRequest.desired_room && (
+              <Text style={styles.swapStatusRoom}>Chuyển tới phòng: {swapRequest.desired_room}</Text>
+            )}
+          </View>
+        )}
+          </>
         ) : (
           <View style={styles.noRoomContainer}>
             <Text style={styles.noRoomText}>Bạn chưa đăng ký phòng nào.</Text>
@@ -167,6 +198,52 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#888',
   },
+
+  swapButton: {
+    marginTop: 16,
+    backgroundColor: '#FF9800', // màu cam nổi bật
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 10,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  swapButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  swapStatusContainer: {
+  marginTop: 20,
+  backgroundColor: '#f1f8e9',
+  padding: 15,
+  borderRadius: 10,
+  shadowColor: '#33691E',
+  shadowOpacity: 0.3,
+  shadowOffset: { width: 0, height: 2 },
+  shadowRadius: 4,
+  elevation: 2,
+},
+swapStatusTitle: {
+  fontWeight: 'bold',
+  color: '#33691E',
+  fontSize: 16,
+},
+swapStatusText: {
+  color: '#558B2F',
+  marginTop: 8,
+  fontSize: 15,
+},
+swapStatusRoom: {
+  marginTop: 6,
+  fontWeight: '600',
+  color: '#33691E',
+  fontSize: 15,
+},
 });
 
 export default Rooms;
