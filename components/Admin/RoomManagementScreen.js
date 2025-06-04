@@ -38,13 +38,9 @@ const RoomManagementScreen = () => {
     const api = authApis(token);
     setLoading(true);
     try {
-      const fakeRegistrations = Array.from({ length: 10 }, (_, i) => ({
-        id: i + 1,
-        student_name: `Sinh viên ${i + 1}`,
-        student_id: `SV00${i + 1}`,
-        room_name: `Phòng ${Math.floor(100 + i * 3)}`,
-        status: i % 3 === 0 ? "approved" : i % 3 === 1 ? "rejected" : "pending",
-      }));
+      // Lấy danh sách đăng ký phòng thật từ API
+      const res = await api.get(endpoints['register-room']);
+      setRegistrations(res.data);
 
       const fakeChangeRequests = Array.from({ length: 8 }, (_, i) => ({
         id: 100 + i,
@@ -55,10 +51,10 @@ const RoomManagementScreen = () => {
         status: i % 2 === 0 ? "pending" : "approved",
       }));
 
-      setRegistrations(fakeRegistrations);
       setChangeRequests(fakeChangeRequests);
     } catch (error) {
-      console.error("Lỗi mock data:", error);
+      console.error("Lỗi lấy dữ liệu thật:", error);
+      Alert.alert("Lỗi", "Không thể tải danh sách đăng ký phòng.");
     } finally {
       setLoading(false);
     }
@@ -101,9 +97,11 @@ const RoomManagementScreen = () => {
         scrollEnabled={false}
         renderItem={({ item }) => (
           <View style={styles.card}>
-            <Text>Sinh viên: {item.student_name} ({item.student_id})</Text>
+            <Text>Sinh viên: {item.student_name} ({item.student_code})</Text>
             <Text>Phòng: {item.room_name}</Text>
-            <Text>Trạng thái: {item.status}</Text>
+            <Text>Tòa nhà: {item.building_name}</Text>
+            <Text>Ngày đăng ký: {new Date(item.registered_at).toLocaleString()}</Text>
+            <Text>Trạng thái: {item.is_active ? "Đang ở" : "Đã rời đi"}</Text>
           </View>
         )}
       />
