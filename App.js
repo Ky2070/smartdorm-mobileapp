@@ -18,6 +18,7 @@ import Profile from "./components/User/Profile";
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import RoomManagementScreen from "./components/Admin/RoomManagementScreen";
+import InvoiceManagementScreen from "./components/Admin/InvoiceManagementScreen";
 import UpdateProfile from "./components/User/UpdateProfile";
 import RoomSwap from "./components/Home/RoomSwap";
 import { useEffect, useState } from 'react';
@@ -38,6 +39,7 @@ const AdminStackScreen = () => (
   <AdminStack.Navigator>
     <AdminStack.Screen name="AdminPanel" component={AdminPanel} options={{title: "Bảng điều khiển"}}/>
     <AdminStack.Screen name="RoomManagement" component={RoomManagementScreen} options={{title: "Quản lý phòng ở"}}/>
+    <AdminStack.Screen name="InvoiceManagement" component={InvoiceManagementScreen} options={{title: "Quản lý hóa đơn"}}/>
   </AdminStack.Navigator>
 );
 

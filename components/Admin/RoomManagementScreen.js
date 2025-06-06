@@ -41,9 +41,13 @@ const RoomManagementScreen = () => {
       // Lấy danh sách đăng ký phòng thật từ API
       const res = await api.get(endpoints['register-room']);
       setRegistrations(res.data);
-
       const swapRes = await api.get(endpoints['list-swap']);
       setChangeRequests(swapRes.data); 
+
+      // Log thông tin người duyệt đơn
+      swapRes.data.forEach(item => {
+        console.log(`Yêu cầu đổi phòng ID ${item.id} - Người duyệt:`, item.processed_by);
+      });
 
     } catch (error) {
       console.error("Lỗi lấy dữ liệu:", error);
@@ -59,11 +63,11 @@ const RoomManagementScreen = () => {
 
     try {
       const url = `${endpoints['room-swap']}${id}/${action}/`; // vd: /room-swap/2/approve/
+      console.log(url);
       await api.put(url);
       Alert.alert("Thành công", `Yêu cầu đã được ${action === "approve" ? "duyệt" : "từ chối"}.`);
       fetchData(); // Làm mới danh sách
     } catch (error) {
-      console.error("Lỗi khi cập nhật trạng thái:", error);
       Alert.alert("Lỗi", `Không thể ${action === "approve" ? "duyệt" : "từ chối"} yêu cầu.`);
     }
   };
@@ -96,10 +100,23 @@ const RoomManagementScreen = () => {
     );
   };
 
+  const mapStatus = (statusText) => {
+    switch (statusText) {
+      case "Chờ duyệt":
+        return "pending";
+      case "Đã duyệt":
+        return "approved";
+      case "Đã từ chối":
+        return "rejected";
+      default:
+        return "unknown";
+    }
+  };
+
   const filteredRequests =
     filterStatus === "all"
       ? changeRequests
-      : changeRequests.filter((r) => r.status === filterStatus);
+      : changeRequests.filter((r) => mapStatus(r.status) === filterStatus);
 
   if (loading) {
     return (
@@ -120,7 +137,7 @@ const RoomManagementScreen = () => {
         renderItem={({ item }) => (
           <View style={styles.card}>
             <Text>Sinh viên: {item.student_name} ({item.student_code})</Text>
-            <Text>Phòng: {item.room_name}</Text>
+            <Text>Phòng: {item.room.name}</Text>
             <Text>Tòa nhà: {item.building_name}</Text>
             <Text>Ngày đăng ký: {new Date(item.registered_at).toLocaleString()}</Text>
             <Text>Trạng thái: {item.is_active ? "Đang ở" : "Đã rời đi"}</Text>
@@ -141,7 +158,14 @@ const RoomManagementScreen = () => {
             ]}
             onPress={() => setFilterStatus(status)}
           >
-            <Text style={styles.filterText}>{status.toUpperCase()}</Text>
+            <Text
+              style={[
+                styles.filterText,
+                filterStatus === status && styles.activeFilterText,
+              ]}
+            >
+              {status.toUpperCase()}
+            </Text>
           </TouchableOpacity>
         ))}
       </View>
@@ -154,12 +178,24 @@ const RoomManagementScreen = () => {
           scrollEnabled={false}
           renderItem={({ item }) => (
             <View style={styles.card}>
-              <Text>Sinh viên: {item.student_name}</Text>
-              <Text>Từ phòng: {item.from_room}</Text>
-              <Text>Đến phòng: {item.to_room}</Text>
+              <Text>Sinh viên: {item.student.first_name} {item.student.last_name}</Text>
+              <Text>Từ phòng: {item.current_room?.name} (Tòa {item.current_room?.building_name})</Text>
+              <Text>Đến phòng: {item.desired_room?.name} (Tòa {item.desired_room?.building_name})</Text>
               <Text>Lý do: {item.reason}</Text>
-              <Text>Trạng thái: {item.status}</Text>
-              {item.status === "pending" && (
+              <Text
+                style={{
+                  color:
+                    mapStatus(item.status) === "pending"
+                      ? "#f39c12"
+                      : mapStatus(item.status) === "approved"
+                      ? "green"
+                      : "red",
+                  fontWeight: "bold",
+                }}>
+                Trạng thái: {item.status}
+              </Text>
+              <Text>Người duyệt: {item.processed_by === 1 ? "Quản trị viên" : "Chưa duyệt"}</Text>
+              {mapStatus(item.status) === "pending" && (
                 <View style={styles.actions}>
                   <TouchableOpacity
                     style={styles.approveBtn}
@@ -228,21 +264,27 @@ const styles = StyleSheet.create({
   },
   filterContainer: {
     flexDirection: "row",
-    marginBottom: 10,
+    marginVertical: 10,
     justifyContent: "space-around",
   },
   filterButton: {
-    padding: 8,
-    borderRadius: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 8,
     borderWidth: 1,
-    borderColor: "#ccc",
+    borderColor: "#bbb",
+    backgroundColor: "#f0f0f0",
   },
   activeFilter: {
-    backgroundColor: "#007bff",
+    backgroundColor: "#4a90e2",
+    borderColor: "#4a90e2",
   },
   filterText: {
+    fontWeight: "bold",
+    color: "#333",
+  },
+  activeFilterText: {
     color: "#fff",
-    fontWeight: "600",
   },
 });
 

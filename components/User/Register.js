@@ -80,6 +80,21 @@ const Register = () => {
       return;
       }
       console.log("Token:", token); // DEBUG
+      const getMimeType = (name) => {
+        if (!name) return 'image/jpeg';
+        const ext = name.split('.').pop().toLowerCase();
+        switch (ext) {
+          case 'jpg':
+          case 'jpeg':
+            return 'image/jpeg';
+          case 'png':
+            return 'image/png';
+          case 'gif':
+            return 'image/gif';
+          default:
+            return 'image/jpeg';
+        }
+      };
       let form = new FormData();
 
       for (let key in user) {
@@ -88,26 +103,33 @@ const Register = () => {
             form.append("avatar", {
               uri: user.avatar.uri,
               name: user.avatar.fileName || "avatar.jpg",
-              type: user.avatar.type || "image/jpeg",
+              type: getMimeType(user.avatar.fileName),
             });
           } else {
             form.append(key, user[key]);
           }
         }
       }
-
+      
       const res = await authApis(token).post(endpoints["register"], form, {
-      headers: {
-        "Content-Type": "multipart/form-data",
-      },
-    });
-
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        }
+      });
+      console.log("Avatar gửi lên:", user.avatar);
       if (res.status === 201) {
         Alert.alert("Thành công", "Tạo tài khoản sinh viên thành công!");
         nav.goBack(); // Hoặc điều hướng đến danh sách sinh viên
       }
     } catch (ex) {
-      console.error(ex);
+      console.error("🧨 Axios Error:", ex.message);
+      if (ex.response) {
+        console.error("👉 Server responded:", ex.response.data);
+      } else if (ex.request) {
+        console.error("👉 No response received. Request was:", ex.request);
+      } else {
+        console.error("👉 Error setting up request:", ex.message);
+      }
       setMsg("Tạo tài khoản thất bại. Vui lòng thử lại!");
     } finally {
       setLoading(false);
@@ -145,7 +167,7 @@ const Register = () => {
               key={field}
               label={label}
               mode="outlined"
-              left={<TextInput.Icon name={icon} />}
+              right={<TextInput.Icon name={icon} />}
               secureTextEntry={secureTextEntry}
               value={user[field] || ""}
               onChangeText={(text) => setState(text, field)}

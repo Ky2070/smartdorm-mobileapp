@@ -12,10 +12,9 @@ import {
 import { Icon } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-// ⚠️ Tạm thời để các screen đang *chưa có* trong project
 const availableScreens = {
   RoomManagement: true,
-  InvoiceManagement: false,
+  InvoiceManagement: true,
   SupportRequests: false,
 };
 

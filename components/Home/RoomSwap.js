@@ -48,7 +48,6 @@ const RoomSwapScreen = ({ navigation, route }) => {
       const filteredRooms = res.data.results.filter(
         room =>
           room.id !== currentRoomId &&
-          room.current_students < room.capacity &&
           room.gender_restriction === userGender
       );
       setRooms(prev => (append ? [...prev, ...filteredRooms] : filteredRooms));
@@ -85,10 +84,11 @@ const RoomSwapScreen = ({ navigation, route }) => {
       const payload = {
         student: studentId,
         current_room: currentRoomId,
-        desired_room: selectedRoomId,
+        desired_room_id: selectedRoomId,
         reason: reason.trim() || undefined,
       };
       await api.post(endpoints['room-swap'], payload);
+      console.log("Payload gửi yêu cầu đổi phòng:", payload);
       Alert.alert('Thành công', 'Yêu cầu đổi phòng đã được gửi.');
       navigation.goBack();
     } catch (err) {

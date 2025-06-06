@@ -11,6 +11,7 @@ import {
   Animated,
   useWindowDimensions,
   TouchableOpacity,
+  Linking,
 } from 'react-native';
 import { MyUserContext } from '../../configs/MyContexts';
 import { authApis, endpoints } from '../../configs/Apis';
@@ -29,8 +30,47 @@ const Rooms = ({ navigation }) => {
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(20)).current;
 
+  const [invoices, setInvoices] = useState([]);
+  const [loadingInvoices, setLoadingInvoices] = useState(true);
+
+
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();  // <-- lấy thông tin safe area
+
+  // Hàm load hóa đơn phòng mình
+const loadInvoices = async () => {
+    try {
+      setLoadingInvoices(true);
+      const token = await AsyncStorage.getItem("token");
+      if (!token) return;
+      const api = authApis(token);
+
+      // gọi API lấy danh sách hóa đơn - giả sử có endpoint tên 'my-invoices' trả về hóa đơn phòng mình
+      const res = await api.get(endpoints['invoices']);
+
+      // Tính total_amount từ invoice_details
+      const updatedInvoices = res.data.map(invoice => {
+      const total = invoice.invoice_details.reduce((sum, detail) => {
+      const amount = parseFloat(detail.amount); // chuyển về float
+        return sum + (isNaN(amount) ? 0 : amount);
+      }, 0);
+      return { ...invoice, total_amount: total };
+    });
+
+      setInvoices(updatedInvoices);
+      console.log("Hóa đơn đã load:", updatedInvoices);
+    } catch (err) {
+      console.log("Lỗi load hóa đơn:", err);
+    } finally {
+      setLoadingInvoices(false);
+    }
+  };
+
+  useEffect(() => {
+    if (room) {
+      loadInvoices();
+    }
+  }, [room]);
 
   const loadMyRoom = async () => {
     try {
@@ -54,7 +94,7 @@ const Rooms = ({ navigation }) => {
       const swapRes = await api.get(endpoints['room-swap']);
       if (swapRes.data && swapRes.data.length > 0) {
         setSwapRequest(swapRes.data[0]); // chỉ lấy yêu cầu mới nhất
-        console.log(swapRes.data);
+        console.log(swapRes.data[0]);
       } else {
         setSwapRequest(null);
       }
@@ -85,6 +125,33 @@ const Rooms = ({ navigation }) => {
       ]).start();
     }
   }, [loading, room, opacity, translateY]);
+
+  // Hàm xử lý thanh toán
+  const handlePayInvoice = async (invoiceId) => {
+      try {
+        const token = await AsyncStorage.getItem("token");
+        if (!token) {
+          Alert.alert("Chưa đăng nhập", "Bạn cần đăng nhập để thanh toán.");
+          return;
+        }
+        const api = authApis(token);
+
+        // Gọi API thanh toán hóa đơn (endpoint: /invoices/{id}/pay/)
+        const res = await api.patch(`${endpoints['invoices']}${invoiceId}/pay/`, {
+          payment_method: 1,
+        });
+
+        if (res.status === 200) {
+          const paymentUrl = res.data.payment_url;
+          // Mở url thanh toán
+          Linking.openURL(paymentUrl);
+        } else {
+          Alert.alert("Lỗi", "Không thể tạo link thanh toán.");
+        }
+      } catch (error) {
+        Alert.alert("Lỗi thanh toán", error.response?.data?.detail || error.message);
+      }
+    };
 
   if (loading) return <ActivityIndicator style={{ flex: 1 }} size="large" color="#2980b9" />;
 
@@ -122,12 +189,12 @@ const Rooms = ({ navigation }) => {
           <View style={[styles.swapStatusContainer]}>
             <Text style={styles.swapStatusTitle}>Trạng thái yêu cầu chuyển phòng:</Text>
             <Text style={styles.swapStatusText}>
-              {swapRequest.status === "pending" && "⏳ Đang chờ duyệt"}
-              {swapRequest.status === "approved" && "✅ Đã được duyệt"}
-              {swapRequest.status === "rejected" && "❌ Bị từ chối"}
+              {swapRequest.processed_at === null && swapRequest.is_approved === false && "⏳ Đang chờ duyệt"}
+              {swapRequest.is_approved === true && "✅ Yêu cầu chuyển phòng đã được duyệt"}
+              {swapRequest.processed_at !== null && swapRequest.is_approved === false && "❌ Yêu cầu chuyển phòng bị từ chối"}
             </Text>
             {swapRequest.desired_room && (
-              <Text style={styles.swapStatusRoom}>Chuyển tới phòng: {swapRequest.desired_room}</Text>
+              <Text style={styles.swapStatusRoom}>Từ {swapRequest.current_room.name} - đến {swapRequest.desired_room.name}</Text>
             )}
           </View>
         )}
@@ -137,6 +204,61 @@ const Rooms = ({ navigation }) => {
             <Text style={styles.noRoomText}>Bạn chưa đăng ký phòng nào.</Text>
           </View>
         )}
+        {/* Hiển thị danh sách hóa đơn phòng */}
+        <View style={{ marginTop: 20 }}>
+          <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 12, color: '#34495e' }}>
+            Hóa đơn phòng của bạn
+          </Text>
+
+          {loadingInvoices ? (
+            <ActivityIndicator size="small" color="#2980b9" />
+          ) : invoices.length === 0 ? (
+            <Text style={{ color: '#888' }}>Chưa có hóa đơn nào.</Text>
+          ) : (
+            invoices.map((invoice) => (
+              <View key={invoice.id} style={{
+                backgroundColor: '#fff',
+                borderRadius: 10,
+                padding: 12,
+                marginBottom: 12,
+                shadowColor: '#000',
+                shadowOpacity: 0.05,
+                shadowOffset: { width: 0, height: 1 },
+                shadowRadius: 4,
+                elevation: 1,
+              }}>
+                <Text style={{ fontWeight: '600', fontSize: 16, color: '#2c3e50' }}>
+                  Hóa đơn tháng: {new Date(invoice.billing_period).toLocaleDateString('vi-VN', { month: '2-digit', year: 'numeric' })}
+                </Text>
+                {invoice.invoice_details.map((detail, index) => (
+                  <Text key={index} style={{ fontSize: 13, color: '#555' }}>
+                    • {detail.fee_type.name}: {detail.amount.toLocaleString()} VNĐ
+                  </Text>
+                ))}
+                <Text style={{ marginTop: 4, fontSize: 15, color: '#34495e' }}>
+                  Tổng tiền: {invoice.total_amount != null ? invoice.total_amount.toLocaleString() : 'N/A'} VNĐ
+                </Text>
+                <Text style={{ marginTop: 4, fontSize: 14, color: invoice.is_paid ? 'green' : 'red', fontWeight: '600' }}>
+                  {invoice.is_paid ? "Đã thanh toán" : "Chưa thanh toán"}
+                </Text>
+
+                {!invoice.is_paid && (
+                  <TouchableOpacity
+                    onPress={() => handlePayInvoice(invoice.id)}
+                    style={{
+                      marginTop: 10,
+                      backgroundColor: '#27ae60',
+                      paddingVertical: 10,
+                      borderRadius: 8,
+                      alignItems: 'center',
+                    }}>
+                    <Text style={{ color: '#fff', fontWeight: '700' }}>Thanh toán</Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            ))
+          )}
+        </View>
       </ScrollView>
     </SafeAreaView>
   );

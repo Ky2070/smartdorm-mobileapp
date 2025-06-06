@@ -174,7 +174,7 @@ const Home = () => {
             onPress={() => setBuildId(b.id)}
             style={MyStyles.m}
           >
-            {b.name}
+            {b.name} - {b.address}
           </Chip>
         ))}
       </View>
