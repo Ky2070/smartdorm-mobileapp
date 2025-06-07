@@ -48,6 +48,8 @@ const ProfileStackScreen = () => (
   <ProfileStack.Navigator>
     <ProfileStack.Screen name="ProfileMain" component={Profile} options={{ title: "Tài khoản" }} />
     <ProfileStack.Screen name="UpdateProfile" component={UpdateProfile} options={{ title: "Cập nhật hồ sơ" }} />
+    <ProfileStack.Screen name="Rooms" component={Rooms} options={{title:"Phòng của tôi"}}/>
+    <ProfileStack.Screen name="RoomSwap" component={RoomSwap} options={{title: "Đổi phòng"}} />
   </ProfileStack.Navigator>
 );
 

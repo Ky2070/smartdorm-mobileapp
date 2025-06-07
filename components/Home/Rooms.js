@@ -19,6 +19,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import RenderHTML from 'react-native-render-html';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
 
 const API_BASE_URL = "https://nquocky.pythonanywhere.com";
 
@@ -33,12 +35,36 @@ const Rooms = ({ navigation }) => {
   const [invoices, setInvoices] = useState([]);
   const [loadingInvoices, setLoadingInvoices] = useState(true);
 
-
   const { width } = useWindowDimensions();
   const insets = useSafeAreaInsets();  // <-- lấy thông tin safe area
 
+  // const lastSwapCreatedAt = new Date(swapRequest.data[0].processed_at);
+  // console.log(lastSwapCreatedAt);
+
+  const [canSwap, setCanSwap] = useState(true);
+  const [daysLeft, setDaysLeft] = useState(0);
+
+  useEffect(() =>{
+    if (swapRequest && swapRequest.processed_at){
+      const createdAt = new Date(swapRequest.processed_at);
+      const now = new Date();
+      const diffDays = Math.floor((now - createdAt) / (1000 * 60 * 60 * 24));
+      if (diffDays < 14) {
+        setCanSwap(false);
+        setDaysLeft(14 - diffDays);
+      } else {
+        setCanSwap(true);
+        setDaysLeft(0);
+      }
+    } else {
+      setCanSwap(true);
+      setDaysLeft(0);
+    }
+  }, [swapRequest]);
+
+
   // Hàm load hóa đơn phòng mình
-const loadInvoices = async () => {
+  const loadInvoices = async () => {
     try {
       setLoadingInvoices(true);
       const token = await AsyncStorage.getItem("token");
@@ -58,7 +84,6 @@ const loadInvoices = async () => {
     });
 
       setInvoices(updatedInvoices);
-      console.log("Hóa đơn đã load:", updatedInvoices);
     } catch (err) {
       console.log("Lỗi load hóa đơn:", err);
     } finally {
@@ -68,9 +93,19 @@ const loadInvoices = async () => {
 
   useEffect(() => {
     if (room) {
-      loadInvoices();
+      if (invoices){
+        loadInvoices();
+      }
+    } else {
+      setLoadingInvoices(false);
     }
-  }, [room]);
+  }, []);
+
+  // useFocusEffect(
+  //   useCallback(() =>{
+  //     loadMyRoom();
+  //   }, [])
+  // );
 
   const loadMyRoom = async () => {
     try {
@@ -93,8 +128,9 @@ const loadInvoices = async () => {
 
       const swapRes = await api.get(endpoints['room-swap']);
       if (swapRes.data && swapRes.data.length > 0) {
-        setSwapRequest(swapRes.data[0]); // chỉ lấy yêu cầu mới nhất
-        console.log(swapRes.data[0]);
+        setSwapRequest(swapRes.data[0]);
+        const lastSwapCreatedAt = new Date(swapRes.data[0].processed_at);
+        console.log(lastSwapCreatedAt);
       } else {
         setSwapRequest(null);
       }
@@ -107,7 +143,7 @@ const loadInvoices = async () => {
 
   useEffect(() => {
     loadMyRoom();
-  }, []);
+  }, [room]);
 
   useEffect(() => {
     if (!loading && room) {
@@ -163,7 +199,22 @@ const loadInvoices = async () => {
           <Animated.View style={[styles.card, { opacity, transform: [{ translateY }] }]}>
             <Image source={{ uri: room.image }} style={styles.image} />
             <View style={styles.infoContainer}>
-              <Text style={styles.title}>{room.name}</Text>
+              <View style={styles.titleRow}>
+                <Text style={styles.title}>{room.name}</Text>
+
+                <View style={styles.genderTag}>
+                  <MaterialIcons
+                    name={room.gender_restriction === "male" ? "male" : "female"}
+                    size={18}
+                    color={room.gender_restriction === "male" ? "#007AFF" : "#FF2D55"}
+                  />
+                  <Text style={[styles.genderText, {
+                    color: room.gender_restriction === "male" ? "#007AFF" : "#FF2D55"
+                  }]}>
+                    {room.gender_restriction === "male" ? "Nam" : "Nữ"}
+                  </Text>
+                </View>
+              </View>
 
               <View style={styles.statusRow}>
                 <MaterialIcons name="meeting-room" size={20} color="#555" />
@@ -178,10 +229,26 @@ const loadInvoices = async () => {
               <RenderHTML contentWidth={width} source={{ html: room.description || "<p>Không có mô tả</p>" }} />
 
               <TouchableOpacity
-                style={styles.swapButton}
-                onPress={() => navigation.navigate("RoomSwap", { currentRoomId: room.id })}>
+                style={[styles.swapButton, { backgroundColor: canSwap ? '#FF9800' : '#ccc' }]}
+                onPress={() => {
+                  if (canSwap) {
+                    navigation.navigate("RoomSwap", { currentRoomId: room.id });
+                  } else {
+                    Alert.alert(
+                      "Không thể đổi phòng",
+                      `Bạn chỉ có thể yêu cầu đổi phòng sau ${daysLeft} ngày nữa kể từ lần yêu cầu gần nhất.`
+                    );
+                  }
+                }}
+                disabled={!canSwap}
+              >
                 <Text style={styles.swapButtonText}>Đổi phòng</Text>
               </TouchableOpacity>
+              {!canSwap && (
+                <Text style={{ marginTop: 8, color: 'red', textAlign: 'center' }}>
+                  Bạn cần chờ {daysLeft} ngày nữa để đổi phòng.
+                </Text>
+              )}
             </View>
           </Animated.View>
           {/* Phần riêng biệt hiển thị trạng thái yêu cầu chuyển phòng */}
@@ -293,7 +360,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 22,
     fontWeight: 'bold',
-    marginBottom: 12,
+    marginBottom: 10,
     color: '#2c3e50',
   },
   statusRow: {
@@ -366,6 +433,30 @@ swapStatusRoom: {
   color: '#33691E',
   fontSize: 15,
 },
+titleRow: {
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  marginBottom: 10,
+},
+
+genderTag: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  backgroundColor: '#ecf0f1',
+  borderRadius: 12,
+  paddingHorizontal: 8,
+  paddingVertical: 2,
+  alignSelf: 'center',
+  marginBottom: 10,
+},
+
+genderText: {
+  marginLeft: 4,
+  fontSize: 14,
+  lineHeight: 18,
+  fontWeight: '500',
+}
 });
 
 export default Rooms;

@@ -106,7 +106,7 @@ const RoomManagementScreen = () => {
         return "pending";
       case "Đã duyệt":
         return "approved";
-      case "Đã từ chối":
+      case "Từ chối":
         return "rejected";
       default:
         return "unknown";
@@ -199,7 +199,12 @@ const RoomManagementScreen = () => {
                 <View style={styles.actions}>
                   <TouchableOpacity
                     style={styles.approveBtn}
-                    onPress={() => handleApprove(item.id)}
+                    onPress={() => {
+                      if (item.desired_room?.is_full){
+                        Alert.alert('Phòng đã đầy, không thể duyệt');
+                        return;
+                      }
+                      handleApprove(item.id)}}
                   >
                     <Text style={styles.btnText}>Duyệt</Text>
                   </TouchableOpacity>

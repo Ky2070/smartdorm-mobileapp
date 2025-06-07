@@ -74,6 +74,11 @@ const RoomSwapScreen = ({ navigation, route }) => {
       return;
     }
 
+    if(selectedRoomId.is_full){
+      Alert.alert('Thông báo', 'Phòng đã đủ sinh viên.');
+      return;
+    }
+
     try {
       const token = await AsyncStorage.getItem('token');
       if (!token) {

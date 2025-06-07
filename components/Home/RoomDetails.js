@@ -57,7 +57,11 @@ const RoomDetails = ({ route, navigation }) => {
             ]);
             return;
         }
-
+        if (user.gender && room.gender_restriction && user.gender !== room.gender_restriction){
+            Alert.alert("Không đủ điều kiện",
+                `${room.name} chỉ dành cho ${room.gender_restriction === 'male' ? 'nam' : 'nữ'}. Bạn không được đăng ký.`);
+                return;
+        }
         try {
             let res = await authApis(token).post(endpoints['register-room'], {
                 room: room.id,
