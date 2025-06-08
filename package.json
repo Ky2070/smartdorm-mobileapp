@@ -21,6 +21,8 @@
     "expo": "53.0.10",
     "expo-image-picker": "^16.1.4",
     "expo-status-bar": "~2.2.3",
+    "lodash": "^4.17.21",
+    "lucide-react-native": "^0.513.0",
     "moment": "^2.30.1",
     "moti": "^0.30.0",
     "react": "19.0.0",
@@ -31,7 +33,8 @@
     "react-native-render-html": "^6.3.4",
     "react-native-safe-area-context": "^5.4.0",
     "react-native-screens": "^4.11.1",
-    "react-native-svg": "15.11.2"
+    "react-native-select-dropdown": "^4.0.1",
+    "react-native-svg": "^15.11.2"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

@@ -71,7 +71,6 @@ const Rooms = ({ navigation }) => {
       if (!token) return;
       const api = authApis(token);
 
-      // gọi API lấy danh sách hóa đơn - giả sử có endpoint tên 'my-invoices' trả về hóa đơn phòng mình
       const res = await api.get(endpoints['invoices']);
 
       // Tính total_amount từ invoice_details
@@ -124,11 +123,15 @@ const Rooms = ({ navigation }) => {
       if (roomData.image && !roomData.image.startsWith("http")) {
         roomData.image = API_BASE_URL + roomData.image;
       }
-      setRoom(roomData);
+      if (JSON.stringify(roomData) !== JSON.stringify(room)) {
+        setRoom(roomData);
+      }
 
       const swapRes = await api.get(endpoints['room-swap']);
       if (swapRes.data && swapRes.data.length > 0) {
-        setSwapRequest(swapRes.data[0]);
+        if (JSON.stringify(swapRes.data[0]) !== JSON.stringify(swapRequest)) {
+          setSwapRequest(swapRes.data[0]);
+        }
         const lastSwapCreatedAt = new Date(swapRes.data[0].processed_at);
         console.log(lastSwapCreatedAt);
       } else {
@@ -143,7 +146,7 @@ const Rooms = ({ navigation }) => {
 
   useEffect(() => {
     loadMyRoom();
-  }, [room]);
+  }, [swapRequest]);
 
   useEffect(() => {
     if (!loading && room) {

@@ -14,11 +14,17 @@ import {
 import Apis, { authApis, endpoints } from "../../configs/Apis"; 
 import { Picker } from "@react-native-picker/picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import SelectDropdown from "react-native-select-dropdown";
+import { ChevronDownIcon } from "lucide-react-native";
 
 const InvoiceManagementScreen = () => {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
+  const [filteredInvoices, setFilteredInvoices] = useState([]);
+  const [selectedRoom, setSelectedRoom] = useState(null);
+  const [selectedStatus, setSelectedStatus] = useState(null);
   const [token, setToken] = useState(null);
   const [feeTypes, setFeeTypes] = useState([]);
   const [invoiceDetails, setInvoiceDetails] = useState([
@@ -98,7 +104,16 @@ const InvoiceManagementScreen = () => {
       Alert.alert("Lỗi", "Không thể tải danh sách phòng.");
     }
   };
-  console.log({
+  const handleCreateInvoice = async () => {
+    if (!roomId || !billingPeriod) {
+      Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin.");
+      return;
+    }
+    if (invoiceDetails.some(d => !d.unit)) {
+      Alert.alert("Lỗi", "Vui lòng chọn đơn vị tính cho tất cả các dòng phí.");
+      return;
+    }
+    console.log({
         room: roomId,
         billing_period: billingPeriod,
         details: invoiceDetails
@@ -110,15 +125,6 @@ const InvoiceManagementScreen = () => {
             unit: d.unit || null
           }))
       });
-  const handleCreateInvoice = async () => {
-    if (!roomId || !billingPeriod) {
-      Alert.alert("Lỗi", "Vui lòng nhập đầy đủ thông tin.");
-      return;
-    }
-    if (invoiceDetails.some(d => !d.unit)) {
-      Alert.alert("Lỗi", "Vui lòng chọn đơn vị tính cho tất cả các dòng phí.");
-      return;
-    }
     try {
       setLoading(true);
       await authApis(token).post(endpoints['invoices'], {
@@ -144,6 +150,24 @@ const InvoiceManagementScreen = () => {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    let result = [...invoices];
+
+    console.log("selectedRoom", selectedRoom);
+    console.log("selectedStatus", selectedStatus);
+
+    if (selectedRoom !== null) {
+      result = result.filter(inv => inv.room.id === selectedRoom || inv.room === selectedRoom);
+    }
+
+    if (selectedStatus !== null) {
+      result = result.filter(inv => inv.is_paid === selectedStatus);
+    }
+
+    console.log("Filtered invoices:", result);
+    setFilteredInvoices(result);
+  }, [selectedRoom, selectedStatus, invoices]);
 
   const renderInvoiceItem = ({ item }) => {
     const totalAmount = item.invoice_details.reduce(
@@ -188,14 +212,50 @@ const InvoiceManagementScreen = () => {
       <Text style={styles.title}>Quản lý hóa đơn</Text>
 
       <TouchableOpacity style={styles.createButton} onPress={openCreateModal}>
-        <Text style={{ color: "#fff", fontWeight: "bold" }}>+ Tạo hóa đơn mới</Text>
+        <Icon name="add-circle-outline" size={20} color="#fff" />
+        <Text style={{ color: "#fff", fontWeight: "bold", marginLeft: 8 }}>Tạo hóa đơn mới</Text>
       </TouchableOpacity>
 
+      <View style={{ marginBottom: 12 }}>
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
+          <SelectDropdown
+            data={['Tất cả', ...rooms.map(r => `${r.building.name} - ${r.name}`)]}
+            defaultButtonText="Lọc theo phòng"
+            onSelect={(selectedItem, index) => {
+              if (index === 0) setSelectedRoom(null);
+              else setSelectedRoom(rooms[index - 1].id);
+            }}
+            buttonStyle={{ width: '48%', backgroundColor: '#fff', borderRadius: 8 }}
+            renderDropdownIcon={() => <ChevronDownIcon size={18} />}
+          />
+
+          <SelectDropdown
+            data={['Tất cả', 'Đã thanh toán', 'Chưa thanh toán']}
+            defaultButtonText="Lọc theo trạng thái"
+            onSelect={(selectedItem) => {
+              if (selectedItem === 'Tất cả') setSelectedStatus(null);
+              else setSelectedStatus(selectedItem === 'Đã thanh toán');
+            }}
+            buttonStyle={{ width: '48%', backgroundColor: '#fff', borderRadius: 8 }}
+            renderDropdownIcon={() => <ChevronDownIcon size={18} />}
+          />
+        </View>
+
+        <TouchableOpacity
+          onPress={() => {
+            setSelectedRoom(null);
+            setSelectedStatus(null);
+          }}
+          style={{ alignSelf: 'flex-end' }}
+        >
+          <Text style={{ color: '#2e86de' }}>Xóa bộ lọc</Text>
+        </TouchableOpacity>
+      </View>
       {loading ? (
         <ActivityIndicator size="large" color="#2e86de" style={{ marginTop: 20 }} />
       ) : (
         <FlatList
-          data={invoices}
+          data={filteredInvoices}
           keyExtractor={(item) => item.id.toString()}
           renderItem={renderInvoiceItem}
           contentContainerStyle={{ paddingBottom: 100 }}
