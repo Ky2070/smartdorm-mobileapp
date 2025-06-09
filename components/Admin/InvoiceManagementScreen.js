@@ -15,16 +15,12 @@ import Apis, { authApis, endpoints } from "../../configs/Apis";
 import { Picker } from "@react-native-picker/picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import Icon from 'react-native-vector-icons/MaterialIcons';
-import SelectDropdown from "react-native-select-dropdown";
-import { ChevronDownIcon } from "lucide-react-native";
+
 
 const InvoiceManagementScreen = () => {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
-  const [filteredInvoices, setFilteredInvoices] = useState([]);
-  const [selectedRoom, setSelectedRoom] = useState(null);
-  const [selectedStatus, setSelectedStatus] = useState(null);
   const [token, setToken] = useState(null);
   const [feeTypes, setFeeTypes] = useState([]);
   const [invoiceDetails, setInvoiceDetails] = useState([
@@ -48,10 +44,43 @@ const InvoiceManagementScreen = () => {
       if (storedToken) {
         setToken(storedToken);
         fetchInvoices(storedToken);
+        fetchRooms(storedToken);
       }
     };
     loadToken();
   }, []);
+
+  const fetchRooms = async (tk) => {
+    try {
+      const res = await authApis(tk).get(endpoints["register-room"]);
+
+      const activeRegs = res.data;
+
+      const roomList = activeRegs
+        .filter((reg) => reg.is_active)
+        .map((reg) => ({
+          id: reg.room.id,
+          name: reg.room.name,
+          building: {
+            name: reg.building_name,
+          },
+        }));
+
+      const uniqueRooms = roomList.filter(
+        (room, index, self) =>
+          index ===
+          self.findIndex(
+            (r) =>
+              r.name === room.name && r.building.name === room.building.name
+          )
+      );
+
+      setRooms(uniqueRooms);
+    } catch (error) {
+      console.error("Lỗi tải danh sách phòng", error);
+      Alert.alert("Lỗi", "Không thể tải danh sách phòng.");
+    }
+  };
 
   const fetchInvoices = async (tk) => {
     try {
@@ -77,31 +106,6 @@ const InvoiceManagementScreen = () => {
       setFeeTypes(res.data);
     } catch (err) {
       Alert.alert("Lỗi", "Không thể tải danh sách loại phí.");
-    }
-
-    try {
-      const res = await authApis(token).get(endpoints["register-room"]);
-
-      const activeRegs = res.data;
-
-      const rooms = activeRegs
-        .filter((reg) => reg.is_active)
-        .map((reg) => ({
-          id: reg.room.id,
-          name: reg.room.name,
-          building: {
-            name: reg.building_name,
-          },
-        }));
-
-    const uniqueRooms = rooms.filter(
-      (room, index, self) => index === self.findIndex((r) => r.name === room.name && r.building.name === room.building.name)
-    );
-
-    setRooms(uniqueRooms);
-    } catch (error) {
-      console.error("Lỗi tải danh sách phòng đang có người ở", error);
-      Alert.alert("Lỗi", "Không thể tải danh sách phòng.");
     }
   };
   const handleCreateInvoice = async () => {
@@ -151,24 +155,6 @@ const InvoiceManagementScreen = () => {
     }
   };
 
-  useEffect(() => {
-    let result = [...invoices];
-
-    console.log("selectedRoom", selectedRoom);
-    console.log("selectedStatus", selectedStatus);
-
-    if (selectedRoom !== null) {
-      result = result.filter(inv => inv.room.id === selectedRoom || inv.room === selectedRoom);
-    }
-
-    if (selectedStatus !== null) {
-      result = result.filter(inv => inv.is_paid === selectedStatus);
-    }
-
-    console.log("Filtered invoices:", result);
-    setFilteredInvoices(result);
-  }, [selectedRoom, selectedStatus, invoices]);
-
   const renderInvoiceItem = ({ item }) => {
     const totalAmount = item.invoice_details.reduce(
       (sum, d) => sum + parseFloat(d.amount),
@@ -215,58 +201,24 @@ const InvoiceManagementScreen = () => {
         <Icon name="add-circle-outline" size={20} color="#fff" />
         <Text style={{ color: "#fff", fontWeight: "bold", marginLeft: 8 }}>Tạo hóa đơn mới</Text>
       </TouchableOpacity>
-
-      <View style={{ marginBottom: 12 }}>
-        <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 8 }}>
-          <SelectDropdown
-            data={['Tất cả', ...rooms.map(r => `${r.building.name} - ${r.name}`)]}
-            defaultButtonText="Lọc theo phòng"
-            onSelect={(selectedItem, index) => {
-              if (index === 0) setSelectedRoom(null);
-              else setSelectedRoom(rooms[index - 1].id);
-            }}
-            buttonStyle={{ width: '48%', backgroundColor: '#fff', borderRadius: 8 }}
-            renderDropdownIcon={() => <ChevronDownIcon size={18} />}
-          />
-
-          <SelectDropdown
-            data={['Tất cả', 'Đã thanh toán', 'Chưa thanh toán']}
-            defaultButtonText="Lọc theo trạng thái"
-            onSelect={(selectedItem) => {
-              if (selectedItem === 'Tất cả') setSelectedStatus(null);
-              else setSelectedStatus(selectedItem === 'Đã thanh toán');
-            }}
-            buttonStyle={{ width: '48%', backgroundColor: '#fff', borderRadius: 8 }}
-            renderDropdownIcon={() => <ChevronDownIcon size={18} />}
-          />
-        </View>
-
-        <TouchableOpacity
-          onPress={() => {
-            setSelectedRoom(null);
-            setSelectedStatus(null);
-          }}
-          style={{ alignSelf: 'flex-end' }}
-        >
-          <Text style={{ color: '#2e86de' }}>Xóa bộ lọc</Text>
-        </TouchableOpacity>
-      </View>
+      
       {loading ? (
         <ActivityIndicator size="large" color="#2e86de" style={{ marginTop: 20 }} />
       ) : (
-        <FlatList
-          data={filteredInvoices}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderInvoiceItem}
-          contentContainerStyle={{ paddingBottom: 100 }}
-          ListEmptyComponent={<Text style={{ textAlign: "center", marginTop: 20 }}>Không có hóa đơn nào.</Text>}
-        />
+          <FlatList
+            data={invoices}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderInvoiceItem}
+            contentContainerStyle={{ paddingBottom: 100 }}
+            ListEmptyComponent={<Text style={{ textAlign: "center", marginTop: 20 }}>Không có hóa đơn nào.</Text>}
+          />
       )}
+      
 
       {/* Modal tạo hóa đơn */}
       <Modal visible={modalVisible} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
+          <View style={styles.modalContentPartial}>
             <Text style={styles.modalTitle}>Tạo hóa đơn mới</Text>
             <ScrollView>
               <Text style={styles.label}>ID phòng (room_id):</Text>
@@ -412,16 +364,16 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   modalOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.4)",
-    justifyContent: "center",
-    paddingHorizontal: 20,
+  flex: 1,
+  justifyContent: "flex-end", // Đẩy modal xuống dưới
+  backgroundColor: "rgba(0, 0, 0, 0.5)", // lớp nền mờ
   },
-  modalContent: {
-    backgroundColor: "white",
-    borderRadius: 16,
-    padding: 20,
-    maxHeight: "70%",
+  modalContentPartial: {
+    backgroundColor: "#fff",
+    padding: 16,
+    borderTopLeftRadius: 16,
+    borderTopRightRadius: 16,
+    maxHeight: "80%", // hoặc bạn có thể dùng "70%" nếu muốn
   },
   modalTitle: {
     fontSize: 20,

@@ -15,7 +15,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 const availableScreens = {
   RoomManagement: true,
   InvoiceManagement: true,
-  SupportRequests: false,
+  SupportRequests: true,
 };
 
 const menuItems = [
