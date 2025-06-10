@@ -13,6 +13,7 @@ import {
 import MyStyles from "../../styles/MyStyles";
 import { Chip, Searchbar, Card } from "react-native-paper";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Icon from "@react-native-vector-icons/material-design-icons";
 
 const RoomCard = ({ item, onPress }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -149,13 +150,23 @@ const Home = () => {
         { paddingHorizontal: 10, paddingBottom: insets.bottom + 10 },
       ]}
     >
-      <Searchbar
-        placeholder="Tìm kiếm phòng KTX..."
-        value={q}
-        onChangeText={setQ}
-        style={{ marginBottom: 10, borderRadius: 30 }}
-        onSubmitEditing={() => Keyboard.dismiss()}
-      />
+      <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 10 }}>
+        <Searchbar
+          placeholder="Tìm kiếm phòng KTX..."
+          value={q}
+          onChangeText={setQ}
+          style={{ flex: 1, borderRadius: 30 }}
+          onSubmitEditing={() => Keyboard.dismiss()}
+        />
+        <TouchableOpacity
+          onPress={() => nav.navigate("Notifications")}
+          style={{ marginLeft: 8 }}
+        >
+          <Icon name="bell" size={28} color="#333" />
+        </TouchableOpacity>
+      </View>
+
+
 
       <View style={[MyStyles.row, MyStyles.wrap, { marginBottom: 10 }]}>
         <Chip

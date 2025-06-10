@@ -25,6 +25,7 @@ import RoomSwap from "./components/Home/RoomSwap";
 import { useEffect, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 import OnboardingScreen from "./components/Animation/OnboardingScreen";
+import NotificationsScreen from "./components/Home/Notifications";
 
 const HomeStack = createNativeStackNavigator();
 const HomeStackScreen = () => (
@@ -32,6 +33,7 @@ const HomeStackScreen = () => (
     <HomeStack.Screen name="Home" component={Home} options={{ title: "Ký túc xá sinh viên" }} />
     <HomeStack.Screen name="RoomDetail" component={RoomDetails} options={{ title: "Chi tiết phòng" }} />
     <HomeStack.Screen name="UpdateProfile" component={UpdateProfile} options={{title: "Cập nhật thông tin"}} />
+    <HomeStack.Screen name="Notifications" component={NotificationsScreen} options={{title: "Thông báo"}} />
   </HomeStack.Navigator>
 );
 

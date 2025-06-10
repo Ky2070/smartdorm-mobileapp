@@ -10,15 +10,64 @@ import {
   TextInput,
 } from "react-native";
 import { IconButton, ActivityIndicator } from "react-native-paper";
+import Apis, {authApis, endpoints} from "../../configs/Apis";
+import { Picker } from "@react-native-picker/picker";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const SupportRequestsScreen = () => {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [emergencyMessage, setEmergencyMessage] = useState("");
+  const [targetRoom, setTargetRoom] = useState("all");
+
+  const [roomList, setRoomList] = useState([{ label: "Tất cả", value: "all" }]);
 
   useEffect(() => {
     // TODO: Replace with real API call
     fetchSupportRequests();
+  }, []);
+
+  useEffect(() => {
+    const fetchRegisteredRooms = async () => {
+      try {
+        const token = await AsyncStorage.getItem("token");
+        const res = await authApis(token).get(endpoints["register-room"]);
+
+        const activeRegs = res.data;
+
+        const roomList = activeRegs
+          .filter((reg) => reg.is_active)
+          .map((reg) => ({
+            id: reg.room.id,
+            name: reg.room.name,
+            building: {
+              name: reg.building_name,
+            },
+          }));
+
+        // Loại bỏ trùng lặp
+        const uniqueRooms = roomList.filter(
+          (room, index, self) =>
+            index ===
+            self.findIndex(
+              (r) =>
+                r.name === room.name && r.building.name === room.building.name
+            )
+        );
+
+        const roomChoices = uniqueRooms.map((r) => ({
+          label: `Phòng ${r.name} - ${r.building.name}`,
+          value: `room_${r.id}`,
+        }));
+
+        setRoomList([{ label: "Tất cả", value: "all" }, ...roomChoices]);
+      } catch (error) {
+        console.error("Lỗi tải danh sách phòng", error);
+        Alert.alert("Lỗi", "Không thể tải danh sách phòng.");
+      }
+    };
+
+    fetchRegisteredRooms();
   }, []);
 
   const fetchSupportRequests = async () => {
@@ -45,6 +94,10 @@ const SupportRequestsScreen = () => {
 
     try {
       // TODO: Gửi emergencyMessage tới backend để broadcast FCM
+        await Apis.post(endpoints['send_notification'], {
+        message: emergencyMessage,
+        target: targetRoom, // "all" hoặc ID phòng
+      });
       Alert.alert("Thành công", "Đã gửi thông báo khẩn đến sinh viên.");
       setEmergencyMessage("");
     } catch (err) {
@@ -74,6 +127,22 @@ const SupportRequestsScreen = () => {
 
       <View style={styles.emergencySection}>
         <Text style={styles.subtitle}>Gửi thông báo khẩn:</Text>
+
+        <View style={styles.pickerWrapper}>
+          <Text style={styles.pickerLabel}>Chọn phòng nhận thông báo:</Text>
+          <View style={styles.pickerContainer}>
+            <Picker
+              selectedValue={targetRoom}
+              onValueChange={(itemValue) => setTargetRoom(itemValue)}
+              style={styles.picker}
+            >
+              {roomList.map((room) => (
+                <Picker.Item key={room.value} label={room.label} value={room.value} />
+              ))}
+            </Picker>
+          </View>
+        </View>
+
         <TextInput
           style={styles.input}
           placeholder="Nội dung thông báo..."
@@ -130,10 +199,7 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
-    padding: 12,
+    marginTop: 10,
     marginBottom: 10,
     backgroundColor: "#fff",
   },
@@ -147,5 +213,22 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
     fontSize: 16,
+  },
+  pickerWrapper: {
+  marginBottom: 10,
+  },
+  pickerLabel: {
+    marginBottom: 4,
+    fontWeight: "500",
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: "#ccc",
+    borderRadius: 8,
+    backgroundColor: "#fff",
+  },
+  picker: {
+    height: 50,
+    width: "100%",
   },
 });
