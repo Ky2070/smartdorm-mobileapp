@@ -14,6 +14,7 @@ export const endpoints = {
     'login': '/o/token/',
     'register': '/users/',
     'current-user': '/users/current-user/',
+    'fcm':'/fcm/',
     'my-room': '/users/my-room/',
     'list-swap':'/room-swap/admin-list/',
 }

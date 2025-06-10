@@ -19,8 +19,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import RenderHTML from 'react-native-render-html';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useFocusEffect } from '@react-navigation/native';
-import { useCallback } from 'react';
+import messaging from '@react-native-firebase/messaging';
 
 const API_BASE_URL = "https://nquocky.pythonanywhere.com";
 
@@ -105,6 +104,29 @@ const Rooms = ({ navigation }) => {
   //     loadMyRoom();
   //   }, [])
   // );
+  const sendFcmToken = async () => {
+    try {
+      const authStatus = await messaging().requestPermission();
+      const enabled = authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
+      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+
+      if (!enabled) {
+        console.log("FCM permission denied");
+        return;
+      }
+
+      const token = await messaging().getToken();
+      console.log("FCM Token:", token);
+
+      const userToken = await AsyncStorage.getItem("token");
+      if (!userToken) return;
+
+      await authApis(userToken).post(endpoints['fcm'], {token});
+      console.log("✅ FCM token đã được gửi về server"); 
+    } catch (error) {
+      console.error("❌ Lỗi gửi FCM token:", error);
+    }
+  };
 
   const loadMyRoom = async () => {
     try {
@@ -126,6 +148,9 @@ const Rooms = ({ navigation }) => {
       if (JSON.stringify(roomData) !== JSON.stringify(room)) {
         setRoom(roomData);
       }
+
+      // Gửi FCM token sau khi load room thành công
+      await sendFcmToken();
 
       const swapRes = await api.get(endpoints['room-swap']);
       if (swapRes.data && swapRes.data.length > 0) {
