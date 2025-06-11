@@ -3,13 +3,26 @@ import { View, Text, Image, ScrollView, SafeAreaView } from "react-native";
 import { Button, Divider } from "react-native-paper";
 import { useNavigation } from "@react-navigation/native";
 import { MyDispatchContext, MyUserContext } from "../../configs/MyContexts";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { authApis, endpoints } from "../../configs/Apis";
 
   const Profile = () => {
     const user = useContext(MyUserContext);
     const dispatch = useContext(MyDispatchContext);
     const nav = useNavigation();
 
-    const logout = () => {
+    const logout = async () => {
+      const token = await AsyncStorage.getItem("token");
+      const fcmToken = await AsyncStorage.getItem("fcmToken");
+
+      try {
+        if (token && fcmToken){
+          await authApis(token).post(endpoints['fcm-logout'], {token: fcmToken});
+          console.log("FCM removed from server");
+        }
+      } catch (error) {
+        console.error("Error removing FCM token from server:", error);
+      }
       dispatch({ type: "logout" });
       nav.navigate("index");
     };
