@@ -15,6 +15,7 @@ export const endpoints = {
     'register': '/users/',
     'current-user': '/users/current-user/',
     'fcm':'/fcm/',
+    'fcm-logout': '/fcm/logout/',
     'my-room': '/users/my-room/',
     'list-swap':'/room-swap/admin-list/',
 }

@@ -118,15 +118,30 @@ const Rooms = ({ navigation }) => {
       const token = await messaging().getToken();
       console.log("FCM Token:", token);
 
+      const savedToken = await AsyncStorage.getItem("fcmToken");
+      if (token === savedToken) {
+        console.log("Token đã được gửi trước đó");
+        return;
+      }
+
       const userToken = await AsyncStorage.getItem("token");
       if (!userToken) return;
 
       await authApis(userToken).post(endpoints['fcm'], {token});
-      console.log("✅ FCM token đã được gửi về server"); 
+      console.log("✅ FCM token đã được gửi về server");
+      await AsyncStorage.setItem("fcmToken", token);
     } catch (error) {
       console.error("❌ Lỗi gửi FCM token:", error);
     }
   };
+
+  useEffect(() => {
+    const checkAndSendToken = async () => {
+      const token = await AsyncStorage.getItem("token");
+      if (token) await sendFcmToken();
+    }
+    checkAndSendToken();
+  }, []);
 
   const loadMyRoom = async () => {
     try {
@@ -148,9 +163,6 @@ const Rooms = ({ navigation }) => {
       if (JSON.stringify(roomData) !== JSON.stringify(room)) {
         setRoom(roomData);
       }
-
-      // Gửi FCM token sau khi load room thành công
-      await sendFcmToken();
 
       const swapRes = await api.get(endpoints['room-swap']);
       if (swapRes.data && swapRes.data.length > 0) {
@@ -209,6 +221,10 @@ const Rooms = ({ navigation }) => {
           const paymentUrl = res.data.payment_url;
           // Mở url thanh toán
           Linking.openURL(paymentUrl);
+
+          setTimeout(() => {
+            loadInvoices();
+          }, 5000);
         } else {
           Alert.alert("Lỗi", "Không thể tạo link thanh toán.");
         }
