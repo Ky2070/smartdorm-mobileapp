@@ -19,8 +19,8 @@ export default function TestNotificationScreen() {
   const handleSendLocalNotification = async () => {
     await Notifications.scheduleNotificationAsync({
       content: {
-        title: '🔔 Local Notification',
-        body: 'This is a test local notification!',
+        title: '🔔 Thông báo',
+        body: 'Ký túc xá sẽ cúp nước vào thứ 7 tuần này!',
       },
       trigger: { seconds: 5 },
     });

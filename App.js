@@ -26,6 +26,7 @@ import { useEffect, useState } from 'react';
 import { ActivityIndicator } from 'react-native';
 import OnboardingScreen from "./components/Animation/OnboardingScreen";
 import NotificationsScreen from "./components/Home/Notifications";
+import TestNotificationScreen from "./components/Home/TestNotification";
 
 import * as Notifications from 'expo-notifications';
 
@@ -36,6 +37,7 @@ const HomeStackScreen = () => (
     <HomeStack.Screen name="RoomDetail" component={RoomDetails} options={{ title: "Chi tiết phòng" }} />
     <HomeStack.Screen name="UpdateProfile" component={UpdateProfile} options={{title: "Cập nhật thông tin"}} />
     <HomeStack.Screen name="Notifications" component={NotificationsScreen} options={{title: "Thông báo"}} />
+    <HomeStack.Screen name="TestNotification" component={TestNotificationScreen} options={{ title: "Test Thông Báo" }} />
   </HomeStack.Navigator>
 );
 
@@ -98,6 +100,14 @@ const TabNavigator = () => {
         options={{
           title: "Trang chủ",
           tabBarIcon: ({ color }) => <Icon source="home" color={color} size={22} />,
+        }}
+      />
+      <Tab.Screen
+        name="NotificationTest"
+        component={TestNotificationScreen}
+        options={{
+          title: "Mẫu thông báo",
+          tabBarIcon: ({ color }) => <Icon source="bell-ring" color={color} size={22} />,
         }}
       />
 

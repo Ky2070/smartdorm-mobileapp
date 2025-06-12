@@ -224,6 +224,23 @@ const Home = () => {
             )}
           </View>
         </TouchableOpacity>
+
+
+         {/* ✅ Nút chuyển sang màn test local notification */}
+        <TouchableOpacity
+          onPress={() => nav.navigate("TestLocalNotification")}
+          style={{
+            marginLeft: 8,
+            backgroundColor: "#27ae60",
+            paddingVertical: 8,
+            paddingHorizontal: 12,
+            borderRadius: 8,
+          }}
+        >
+          <Text style={{ color: "#fff", fontWeight: "bold", fontSize: 12 }}>
+            Mẫu thông báo
+          </Text>
+        </TouchableOpacity>
       </View>
 
 
