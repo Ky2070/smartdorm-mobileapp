@@ -78,6 +78,7 @@ const Home = () => {
   const [q, setQ] = useState("");
   const [canLoadMore, setCanLoadMore] = useState(true);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const pageRef = useRef(1);
   const listRef = useRef();
@@ -119,6 +120,36 @@ const Home = () => {
   };
 
   useEffect(() => {
+    const loadFakeNotifications = () => {
+      const fakeData = [
+        {
+          id: 1,
+          title: "Cúp điện toàn ký túc xá",
+          message: "Ký túc xá sẽ bị cúp điện từ 14h đến 17h hôm nay.",
+          read: false,
+        },
+        {
+          id: 2,
+          title: "Thông báo đóng tiền",
+          message: "Hạn chót đóng tiền phòng là ngày 15/06.",
+          read: false,
+        },
+        {
+          id: 3,
+          title: "Bảo trì hệ thống nước",
+          message: "Hệ thống nước sẽ bảo trì vào sáng thứ 7 tuần này.",
+          read: false,
+        },
+      ];
+
+      const unread = fakeData.filter(n => !n.read).length;
+      setUnreadCount(unread);
+    };
+
+    loadFakeNotifications();
+  }, []);
+
+  useEffect(() => {
     pageRef.current = 1;
     setCanLoadMore(true);
     loadRooms(true);
@@ -137,6 +168,14 @@ const Home = () => {
   useEffect(() => {
     loadBuilds();
   }, []);
+
+  useEffect(() => {
+    const unsubscribe = nav.addListener("focus", () => {
+      setUnreadCount(0);
+    });
+
+    return unsubscribe;
+  }, [nav]);
 
   const onScroll = (event) => {
     const offsetY = event.nativeEvent.contentOffset.y;
@@ -162,7 +201,28 @@ const Home = () => {
           onPress={() => nav.navigate("Notifications")}
           style={{ marginLeft: 8 }}
         >
-          <Icon name="bell" size={28} color="#333" />
+          <View>
+            <Icon name="bell" size={28} color="#333" />
+            {unreadCount > 0 && (
+              <View
+                style={{
+                  position: "absolute",
+                  right: -4,
+                  top: -4,
+                  backgroundColor: "red",
+                  borderRadius: 10,
+                  width: 18,
+                  height: 18,
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Text style={{ color: "white", fontSize: 10, fontWeight: "bold" }}>
+                  {unreadCount > 9 ? "9+" : unreadCount}
+                </Text>
+              </View>
+            )}
+          </View>
         </TouchableOpacity>
       </View>
 

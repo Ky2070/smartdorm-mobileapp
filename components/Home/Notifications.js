@@ -16,16 +16,19 @@ const NotificationsScreen = () => {
                 id: 1,
                 title: "Cúp điện toàn ký túc xá",
                 message: "Ký túc xá sẽ bị cúp điện từ 14h đến 17h hôm nay.",
+                read: false,
                 },
                 {
                 id: 2,
                 title: "Thông báo đóng tiền",
                 message: "Hạn chót đóng tiền phòng là ngày 15/06.",
+                read: false,
                 },
                 {
                 id: 3,
                 title: "Bảo trì hệ thống nước",
                 message: "Hệ thống nước sẽ bảo trì vào sáng thứ 7 tuần này.",
+                read: false,
                 },
             ];
         setNotifications(fakeData);

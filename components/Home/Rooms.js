@@ -19,7 +19,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import RenderHTML from 'react-native-render-html';
 import { MaterialIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import messaging from '@react-native-firebase/messaging';
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
 
 const API_BASE_URL = "https://nquocky.pythonanywhere.com";
 
@@ -106,17 +107,27 @@ const Rooms = ({ navigation }) => {
   // );
   const sendFcmToken = async () => {
     try {
-      const authStatus = await messaging().requestPermission();
-      const enabled = authStatus === messaging.AuthorizationStatus.AUTHORIZED ||
-      authStatus === messaging.AuthorizationStatus.PROVISIONAL;
+      if(!Device.isDevice){
+        console.log('Phải sử dụng thiết bị thật để nhận push token');
+        return;
+      }
+      
+      const {status: existingStatus} = await Notifications.getPermissionsAsync();
+      let finalStatus = existingStatus;
 
-      if (!enabled) {
-        console.log("FCM permission denied");
+      if (existingStatus !== 'granted') {
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+      }
+
+      if (finalStatus !== 'granted') {
+        console.log('Quyền thông báo bị từ chối!');
         return;
       }
 
-      const token = await messaging().getToken();
-      console.log("FCM Token:", token);
+      const tokenData = await Notifications.getExpoPushTokenAsync();
+      const token = tokenData.data;
+      console.log('Expo Push Token:', token);
 
       const savedToken = await AsyncStorage.getItem("fcmToken");
       if (token === savedToken) {
@@ -128,10 +139,10 @@ const Rooms = ({ navigation }) => {
       if (!userToken) return;
 
       await authApis(userToken).post(endpoints['fcm'], {token});
-      console.log("✅ FCM token đã được gửi về server");
+      console.log('✅ Expo push token đã được gửi về server');
       await AsyncStorage.setItem("fcmToken", token);
     } catch (error) {
-      console.error("❌ Lỗi gửi FCM token:", error);
+      console.error('❌ Lỗi gửi Expo push token:', error);
     }
   };
 

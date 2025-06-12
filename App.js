@@ -27,6 +27,8 @@ import { ActivityIndicator } from 'react-native';
 import OnboardingScreen from "./components/Animation/OnboardingScreen";
 import NotificationsScreen from "./components/Home/Notifications";
 
+import * as Notifications from 'expo-notifications';
+
 const HomeStack = createNativeStackNavigator();
 const HomeStackScreen = () => (
   <HomeStack.Navigator>
@@ -174,6 +176,15 @@ const App = () => {
     };
     checkOnboarding();
   }, []);
+
+  // CẤU HÌNH THÔNG BÁO
+  Notifications.setNotificationHandler({
+    handleNotification: async () => ({
+      shouldShowAlert: true,        // Hiển thị thông báo
+      shouldPlaySound: false,       // Không phát âm thanh
+      shouldSetBadge: false,        // Không đặt biểu tượng badge
+    }),
+  });
 
   if (isLoading) {
     return <ActivityIndicator size="large" style={{ flex: 1 }} />;
