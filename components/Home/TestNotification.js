@@ -1,15 +1,30 @@
-import React, { useEffect } from 'react';
-import { Button, View, Text, Platform } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { Button, View, Text, Platform, Alert } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 
 export default function TestNotificationScreen() {
+  const [expoPushToken, setExpoPushToken] = useState(null);
+
   useEffect(() => {
-    // Yêu cầu quyền gửi thông báo
     const requestPermissions = async () => {
-      const { status } = await Notifications.requestPermissionsAsync();
-      if (status !== 'granted') {
-        alert('Permission not granted!');
+      if (Device.isDevice) {
+        const { status: existingStatus } = await Notifications.getPermissionsAsync();
+        let finalStatus = existingStatus;
+        if (existingStatus !== 'granted') {
+          const { status } = await Notifications.requestPermissionsAsync();
+          finalStatus = status;
+        }
+        console.log('Notification permission:', finalStatus);
+        if (finalStatus !== 'granted') {
+          Alert.alert('Thông báo', 'Bạn chưa cấp quyền thông báo!');
+        }
+
+        const token = (await Notifications.getExpoPushTokenAsync()).data;
+        console.log('Expo Push Token:', token);
+        setExpoPushToken(token);
+      } else {
+        Alert.alert('Thông báo', 'Thông báo chỉ hoạt động trên thiết bị thực!');
       }
     };
 
@@ -17,13 +32,20 @@ export default function TestNotificationScreen() {
   }, []);
 
   const handleSendLocalNotification = async () => {
-    await Notifications.scheduleNotificationAsync({
-      content: {
-        title: '🔔 Thông báo',
-        body: 'Ký túc xá sẽ cúp nước vào thứ 7 tuần này!',
-      },
-      trigger: { seconds: 5 },
-    });
+    try {
+      const id = await Notifications.scheduleNotificationAsync({
+        content: {
+          title: '🔔 Thông báo test',
+          body: 'Ký túc xá sẽ cúp nước vào thứ 7 tuần này!',
+          data: { customData: 'xyz' },
+        },
+        trigger: { seconds: 3 },
+      });
+
+      console.log("Đã lên lịch thông báo, ID:", id);
+    } catch (error) {
+      console.error("Lỗi gửi thông báo:", error);
+    }
   };
 
   return (

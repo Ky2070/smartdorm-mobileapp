@@ -189,10 +189,10 @@ const App = () => {
 
   // CẤU HÌNH THÔNG BÁO
   Notifications.setNotificationHandler({
-    handleNotification: async () => ({
-      shouldShowAlert: true,        // Hiển thị thông báo
-      shouldPlaySound: false,       // Không phát âm thanh
-      shouldSetBadge: false,        // Không đặt biểu tượng badge
+  handleNotification: async () => ({
+    shouldShowBanner: true,       // Hiển thị banner khi foreground
+    shouldShowList: true,         // Hiển thị trong notification tray
+    shouldPlaySound: true,
     }),
   });
 
