@@ -32,6 +32,9 @@ const Rooms = ({ navigation }) => {
   const opacity = useRef(new Animated.Value(0)).current;
   const translateY = useRef(new Animated.Value(20)).current;
 
+  const [notifications, setNotifications] = useState([]);
+  const [showNotifications, setShowNotifications] = useState(false);
+
   const [invoices, setInvoices] = useState([]);
   const [loadingInvoices, setLoadingInvoices] = useState(true);
 
@@ -62,6 +65,23 @@ const Rooms = ({ navigation }) => {
     }
   }, [swapRequest]);
 
+
+  const loadNotifications = async () => {
+  try {
+    const token = await AsyncStorage.getItem("token");
+    if (!token) return;
+
+    const api = authApis(token);
+    const res = await api.get(endpoints['notifications']);
+    setNotifications(res.data);
+  } catch (err) {
+    console.error("Lỗi load thông báo:", err);
+  }
+};
+
+ useEffect(() => {
+  loadNotifications();
+ }, []);
 
   // Hàm load hóa đơn phòng mình
   const loadInvoices = async () => {
@@ -256,6 +276,9 @@ const Rooms = ({ navigation }) => {
             <View style={styles.infoContainer}>
               <View style={styles.titleRow}>
                 <Text style={styles.title}>{room.name}</Text>
+                <TouchableOpacity onPress={() => setShowNotifications(true)}>
+                  <MaterialIcons name="notifications" size={24} color="#FF9800" />
+                </TouchableOpacity>
 
                 <View style={styles.genderTag}>
                   <MaterialIcons
@@ -382,6 +405,31 @@ const Rooms = ({ navigation }) => {
           )}
         </View>
       </ScrollView>
+      {showNotifications && (
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Thông báo từ quản trị viên</Text>
+            <ScrollView style={{ maxHeight: 300 }}>
+              {notifications.length === 0 ? (
+                <Text style={{ color: '#888' }}>Không có thông báo nào.</Text>
+              ) : (
+                notifications.map((noti, index) => (
+                  <View key={index} style={styles.notificationItem}>
+                    <Text style={styles.notificationTitle}>{noti.title}</Text>
+                    <Text style={styles.notificationBody}>{noti.message}</Text>
+                    <Text style={styles.notificationTime}>
+                      {new Date(noti.created_at).toLocaleString("vi-VN")}
+                    </Text>
+                  </View>
+                ))
+              )}
+            </ScrollView>
+            <TouchableOpacity onPress={() => setShowNotifications(false)} style={styles.closeButton}>
+              <Text style={styles.closeButtonText}>Đóng</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      )}
     </SafeAreaView>
   );
 };
@@ -511,7 +559,56 @@ genderText: {
   fontSize: 14,
   lineHeight: 18,
   fontWeight: '500',
-}
+},
+modalOverlay: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0, bottom: 0,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 16,
+    width: '90%',
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+    color: '#2c3e50'
+  },
+  notificationItem: {
+    borderBottomWidth: 1,
+    borderColor: '#eee',
+    paddingVertical: 8
+  },
+  notificationTitle: {
+    fontWeight: 'bold',
+    color: '#34495e'
+  },
+  notificationBody: {
+    color: '#555'
+  },
+  notificationTime: {
+    color: '#999',
+    fontSize: 12,
+    marginTop: 4
+  },
+  closeButton: {
+    marginTop: 10,
+    backgroundColor: '#2980b9',
+    padding: 10,
+    borderRadius: 8,
+    alignItems: 'center'
+  },
+  closeButtonText: {
+    color: '#fff',
+    fontWeight: 'bold'
+  }
 });
 
 export default Rooms;
